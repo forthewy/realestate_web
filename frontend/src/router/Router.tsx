@@ -1,21 +1,21 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Layout from "../components/layout/Layout";
 import Dashboard from "../pages/Dashboard";
-import Map from "../pages/Map";
-// import Transaction from "../pages/Transaction";
+import Transaction from "../pages/Transaction";
 import Settings from "../pages/Settings";
+import LogIn from "../pages/LogIn";
 
 export default function Router() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/map" element={<Map />} />
-                <Route path="/settings" element={<Settings />} />
-                {/* 이후 
+                <Route element={<Layout />}>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/login" element={<LogIn />} />
                     <Route path="/transaction" element={<Transaction />} />
-                    <Route path="/about" element={<About />} />
-                */}
+                    <Route path="/settings" element={<Settings />} />
+                </Route>
             </Routes>
         </BrowserRouter>
     );

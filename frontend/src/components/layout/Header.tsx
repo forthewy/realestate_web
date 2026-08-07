@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function Header() {
@@ -9,24 +9,60 @@ export default function Header() {
             <div className="px-6 text-xl">
                 logo
             </div>
-            <nav className="flex gap-8 mx-auto ml-8 text-xl">
-                <Link to="/">대시보드</Link>
-                <Link to="/map">지도</Link>
-                <Link to="/transaction">실거래</Link>
-                <Link to="/settings">설정</Link>
-                <button>About</button>
+            <nav className="flex gap-8 mx-auto ml-8 text-2xl font-medium">
+                <Link
+                    to="/"
+                    className="transition-colors hover:text-primary"
+                >
+                    대시보드
+                </Link>
+
+                <Link
+                    to="/transaction"
+                    className="transition-colors hover:text-primary"
+                >
+                    실거래
+                </Link>
+
+                <Link
+                    to="/user"
+                    className="transition-colors hover:text-primary"
+                >
+                    사용자
+                </Link>
+
+                <Link
+                    to="/settings"
+                    className="transition-colors hover:text-primary"
+                >
+                    설정
+                </Link>
+
+                <Link
+                    to="/about"
+                    className="transition-colors hover:text-primary"
+                >
+                    About
+                </Link>
+                 <Link
+                    to="/login"
+                    className="transition-colors hover:text-primary"
+                >
+                    로그인
+                </Link>
             </nav>
             {/* 검색 */}
             <div className="px-6">
-                <input 
-                    type="search" 
-                    value={searchWord} 
+                <input
+                    type="search"
+                    value={searchWord}
                     onChange={(e) => setSearchWord(e.target.value)}
-                    placeholder="지역을 검색하세요" 
+                    placeholder="지역을 검색하세요"
                     className="border"
                 />
                 <button>검색</button>
             </div>
+             
         </header>
     )
 }

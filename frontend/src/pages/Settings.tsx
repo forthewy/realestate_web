@@ -1,4 +1,4 @@
-export default function Map() {
+export default function Setting() {
     return (
         <div>
             <h1>세팅</h1> 
