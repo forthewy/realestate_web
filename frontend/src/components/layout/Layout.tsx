@@ -6,10 +6,12 @@ export default function Layout() {
     return (
         <>
             <Header />
-            <Sidebar />
-            <main>
-                <Outlet />
-            </main>
+            <div className="flex">
+                <Sidebar />
+                <main className="flex-1">
+                    <Outlet />
+                </main>
+            </div>
         </>
     );
 }

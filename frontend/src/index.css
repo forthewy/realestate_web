@@ -4,6 +4,8 @@
   --color-primary: #b34312;
   --color-background: #f8fafc;
   --color-surface: #ffffff;
+  --color-primary-light: #e08935;
 
-  --color-text-secondary: #e08935;
+  --color-text-secondary: #6b7280;
+  --color-gray: #d1d5db;
 }
