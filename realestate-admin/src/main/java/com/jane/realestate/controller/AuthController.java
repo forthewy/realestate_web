@@ -1,5 +1,7 @@
 package com.jane.realestate.controller;
 
+
+
 import com.jane.realestate.dto.LoginRequest;
 import com.jane.realestate.dto.LoginResponse;
 import com.jane.realestate.service.AuthService;
@@ -22,7 +24,6 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request) {
 
-        System.out.println("========== LOGIN ==========");
         System.out.println(request.getUsername());
 
         return ResponseEntity.ok(authService.login(request));
