@@ -1,10 +1,9 @@
-import { BoardCard } from "../components/dashboard/BoardCard";
-import { RecentSchedule } from "../components/dashboard/RecentSchedule";
+import { BoardCard } from "../../components/dashboard/BoardCard";
 
-export default function Dashboard() {
+export default function AdminHome() {
   return (
     <>
-       <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-4 gap-6">
             <BoardCard
                 title="회원 수"
                 value="153명"
@@ -25,7 +24,6 @@ export default function Dashboard() {
                 value="12건"
             />
         </div>
-      <RecentSchedule />
     </>
   );
 }

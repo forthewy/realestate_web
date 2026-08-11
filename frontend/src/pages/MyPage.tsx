@@ -1,4 +1,4 @@
-export default function Setting() {
+export default function MyPage() {
     return (
         <div>
             <h1>세팅</h1> 
