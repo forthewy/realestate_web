@@ -1,5 +1,4 @@
 import { BoardCard } from "../components/dashboard/BoardCard";
-import { RecentSchedule } from "../components/dashboard/RecentSchedule";
 
 export default function Dashboard() {
   return (
@@ -25,7 +24,6 @@ export default function Dashboard() {
                 value="12건"
             />
         </div>
-      <RecentSchedule />
     </>
   );
 }

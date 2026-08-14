@@ -15,22 +15,22 @@ export default function Sidebar() {
         <Link
           to="/transaction"
           className={linkStyle}>
-            실거래
+          실거래
         </Link>
         <Link
           to="/transaction"
           className={linkStyle}>
-            사용자
+          사용자
         </Link>
         <Link
           to="/settings"
           className={linkStyle}>
-            설정
+          설정
         </Link>
         <Link
           to=""
           className={linkStyle}>
-            About
+          About
         </Link>
       </nav>
     </aside>

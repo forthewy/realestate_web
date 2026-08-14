@@ -22,7 +22,7 @@ export default function Router() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/login" element={<LogIn />} />
                     <Route path="/transaction" element={<Transaction />} />
-                    {/* 로그인 사용자 */}
+                    {/* 로그인 사용자 */}Z
                     <Route
                         path="/mypage"
                         element={
@@ -32,7 +32,7 @@ export default function Router() {
                         }
                     />
                 </Route>
-                    {/* 관리자 */}
+                 {/* 관리자 */}
                     <Route
                         path="/admin"
                         element={
