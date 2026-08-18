@@ -45,8 +45,6 @@ public class Transaction {
     @Column(nullable = false, length = 5)
     private String sggCd;
 
-    private String roadName;
-
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

@@ -1,6 +1,7 @@
 package com.jane.realestate.controller;
 
 import com.jane.realestate.dto.TransactionResponse;
+import com.jane.realestate.dto.api.TransactionApiItem;
 import com.jane.realestate.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,25 @@ public class TransactionController {
     ) {
         return ResponseEntity.ok(
                 transactionService.getTransactions(sggCd, umdNm, minAmount, maxAmount, fromDate, toDate)
+        );
+    }
+
+    // API 호출
+    // 공공데이터에서 거래 가져오기
+    @GetMapping("/getTransactions")
+    public ResponseEntity<?> getTransactionsFromApi(
+            @RequestParam String sggCd,
+            @RequestParam String dealYmd,
+            @RequestParam(required = false) Long minAmount,
+            @RequestParam(required = false) Long maxAmount
+    ) {
+        return ResponseEntity.ok(
+                transactionService.getTransactionsFromApi(
+                        sggCd,
+                        dealYmd,
+                        minAmount,
+                        maxAmount
+                )
         );
     }
 }

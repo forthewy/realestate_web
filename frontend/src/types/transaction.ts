@@ -10,7 +10,20 @@ export type Transaction = {
   umdNm: string;
   sggCd: string;
   sggName: string;
-  roadName: string | null;
+};
+export type TransactionApiItem = {
+  aptNm: string;
+  dealAmount: string;
+
+  dealYear: number;
+  dealMonth: number;
+  dealDay: number;
+
+  excluUseAr: number | null;
+  floor: number | null;
+  buildYear: number | null;
+
+  umdNm: string;
 };
 
 export type RegionStat = {

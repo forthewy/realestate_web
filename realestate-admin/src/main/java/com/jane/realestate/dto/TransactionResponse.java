@@ -1,6 +1,7 @@
 package com.jane.realestate.dto;
 
 import com.jane.realestate.entity.Transaction;
+import com.jane.realestate.dto.api.TransactionApiItem;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,8 +22,8 @@ public class TransactionResponse {
     private String umdNm;
     private String sggCd;
     private String sggName;
-    private String roadName;
 
+    // DB 용
     public static TransactionResponse from(Transaction transaction, String sggName) {
         return TransactionResponse.builder()
                 .id(transaction.getId())
@@ -36,7 +37,31 @@ public class TransactionResponse {
                 .umdNm(transaction.getUmdNm())
                 .sggCd(transaction.getSggCd())
                 .sggName(sggName)
-                .roadName(transaction.getRoadName())
+                .build();
+    }
+
+    // API 호출용
+    public static TransactionResponse from(TransactionApiItem item) {
+        return TransactionResponse.builder()
+                .aptName(item.getAptNm())
+                .dealAmount(
+                        Long.parseLong(
+                                item.getDealAmount()
+                                        .replace(",", "")
+                                        .trim()
+                        )
+                )
+                .dealDate(
+                        LocalDate.of(
+                                item.getDealYear(),
+                                item.getDealMonth(),
+                                item.getDealDay()
+                        )
+                )
+                .area(item.getExcluUseAr())
+                .floor(item.getFloor())
+                .buildYear(item.getBuildYear())
+                .umdNm(item.getUmdNm())
                 .build();
     }
 }
