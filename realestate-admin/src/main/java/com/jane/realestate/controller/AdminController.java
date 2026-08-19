@@ -4,9 +4,8 @@ import com.jane.realestate.dto.UserResponse;
 import com.jane.realestate.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,6 +18,12 @@ public class AdminController {
 
     @GetMapping("/users")
     public ResponseEntity<List<UserResponse>> getUsers() {
+
         return ResponseEntity.ok(adminService.getUsers());
+    }
+
+    @PostMapping("/import")
+    public void importExcel(@RequestParam("file") MultipartFile file) {
+        adminService.importExcel(file);
     }
 }

@@ -3,7 +3,6 @@ package com.jane.realestate.service;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.jane.realestate.dto.PageResponse;
 import com.jane.realestate.dto.TransactionResponse;
-import com.jane.realestate.dto.api.TransactionApiItem;
 import com.jane.realestate.dto.api.TransactionApiResponse;
 import com.jane.realestate.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;

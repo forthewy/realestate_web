@@ -73,12 +73,13 @@ public class AuthService {
                 .role(user.getRole())
                 .build();
     }
-
-    public boolean checkUsername(String username) {
-        return !userRepository.existsByUsername(username);
-    }
-
+    // 아이디 중복 확인
     public boolean checkPhone(String phone) {
         return !userRepository.existsByPhone(phone);
+    }
+
+    // 핸드폰 번호 중복 확인
+    public boolean checkUsername(String username) {
+        return !userRepository.existsByUsername(username);
     }
 }
