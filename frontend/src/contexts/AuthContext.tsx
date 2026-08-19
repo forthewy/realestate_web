@@ -5,7 +5,7 @@ import {
     useState,
 } from "react";
 
-import type { LoginResponse } from "../types/auth";
+import type { LoginResponse } from "../auth/types/auth";
 import type { PropsWithChildren } from "react";
 
 type AuthContextType = {

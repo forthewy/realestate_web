@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { apiFetch } from "../services/api"
+import { useAuth } from "../../contexts/AuthContext";
+import { apiFetch } from "../../services/api"
 
 export default function LogIn() {
     const [username, setUsername] = useState("");
@@ -44,9 +44,17 @@ export default function LogIn() {
     return (
         <div className="flex items-center justify-center gap-4 pt-20">
             <div className="w-full max-w-md flex-col flex gap-4 rounded-2xl border border-gray p-8">
-                <h1 className="text-center text-3xl font-bold text-primary">
-                    로그인
-                </h1>
+                <div className="text-center mb-4">
+                    <h1
+                        className="text-6xl font-bold text-primary"
+                    >
+                        Real Estate
+                    </h1>
+
+                    <p className="mt-2 text-text-secondary">
+                        Real Estate 실거래가 대시보드 웹
+                    </p>
+                </div>
                 <form onSubmit={loginSubmit}>
                     <div className="flex flex-col gap-2">
                         <label className="text-xl font-medium text-text-secondary">

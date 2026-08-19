@@ -1,16 +1,17 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Layout from "../components/layout/Layout";
-import Dashboard from "../pages/Dashboard";
-import Transaction from "../pages/Transaction";
-import LogIn from "../pages/LogIn";
-import Register from "../pages/Register";
-import ProtectedRoute from "../components/auth/ProtectedRoute";
-import MyPage from "../pages/MyPage";
-import AdminRoute from "../components/auth/AdminRoute";
-import AdminLayout from "../components/layout/admin/AdminLayout";
-import AdminHome from "../pages/admin/AdminHome";
-import AdminUsers from "../pages/admin/AdminUsers";
+import Layout from "../components/common/Layout";
+import Dashboard from "../dashboard/pages/Dashboard";
+import Transaction from "../transaction/pages/Transaction";
+import LogIn from "../auth/pages/LogIn";
+import Register from "../auth/pages/Register";
+import ProtectedRoute from "../auth/components/ProtectedRoute";
+import MyPage from "../mypage/pages/MyPage";
+import AdminRoute from "../auth/components/AdminRoute";
+import AdminLayout from "../admin/components/AdminLayout";
+import AdminHome from "../admin/pages/AdminHome";
+import AdminUsers from "../admin/pages/AdminUsers";
+import AdminImport from "../admin/pages/AdminImport";
 
 export default function Router() {
     return (
@@ -43,8 +44,8 @@ export default function Router() {
                     >
                         <Route index element={<AdminHome />} />
                         <Route path="users" element={<AdminUsers />} />
-                        {/* <Route path="import" element={<Import />} />
-                        <Route path="settings" element={<Settings />} /> */}
+                        <Route path="import" element={<AdminImport />} />
+                        {/* <Route path="settings" element={<Settings />} /> */}
                     </Route>    
             </Routes>
         </BrowserRouter>

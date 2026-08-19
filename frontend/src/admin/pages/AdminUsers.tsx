@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import type { User } from "../../types/user";
+import type { User } from "../types/user";
 import { apiFetch } from "../../services/api";
-import UserTable from "../../components/admin/UserTable";
+import UserTable from "../components/UserTable";
 
 export default function AdminUsers() {
     const [searchKeyword, setSearchKeyword] = useState("");
@@ -35,13 +35,15 @@ export default function AdminUsers() {
     };
 
     return (
-        <div>
-            <h1 className="mb-6 text-3xl font-bold text-primary">
-                회원관리
-            </h1>
-            <form onSubmit={searchUser}>
+        <div className="p-8">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-primary">
+                    회원관리
+                </h1>
+            </div>
+            <form onSubmit={searchUser} className="mb-8 flex">
                 <input
-                    className="rounded-lg border border-gray px-4 py-3 outline-none focus:ring-1"
+                    className="w-full max-w-md border border-gray px-4 py-3"
                     type="text"
                     value={searchKeyword}
                     placeholder="아이디 혹은 이름 검색"
@@ -49,7 +51,7 @@ export default function AdminUsers() {
                 />
                 <button
                     type="submit"
-                    className="rounded-lg bg-primary px-4 text-white"
+                    className="bg-primary px-4 text-white text-m font-semibold"
                 >
                     검색
                 </button>

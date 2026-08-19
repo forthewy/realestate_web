@@ -1,4 +1,4 @@
-import { BoardCard } from "../../components/dashboard/BoardCard";
+import { BoardCard } from "../../dashboard/components/BoardCard";
 
 export default function AdminHome() {
   return (

@@ -17,7 +17,6 @@ export default function Header() {
     };
 
 
-
     const linkStyle =
         "px-3 py-2 rounded-lg transition-colors";
 

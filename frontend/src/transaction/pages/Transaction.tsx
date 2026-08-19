@@ -1,5 +1,5 @@
 import { useState } from "react";
-import TransactionTable from "../components/transaction/TransactionTable";
+import TransactionTable from "../components/TransactionTable";
 import type { Transaction, PageResponse } from "../types/transaction";
 import { regions, type Sido } from "../data/regions";
 
