@@ -44,15 +44,13 @@ public class TransactionController {
     public ResponseEntity<?> getTransactionsFromApi(
             @RequestParam String sggCd,
             @RequestParam String dealYmd,
-            @RequestParam(required = false) Long minAmount,
-            @RequestParam(required = false) Long maxAmount
+            @RequestParam(defaultValue = "1") String pageNo
     ) {
         return ResponseEntity.ok(
                 transactionService.getTransactionsFromApi(
                         sggCd,
                         dealYmd,
-                        minAmount,
-                        maxAmount
+                        pageNo
                 )
         );
     }

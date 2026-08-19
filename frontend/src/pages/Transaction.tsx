@@ -1,6 +1,6 @@
 import { useState } from "react";
 import TransactionTable from "../components/transaction/TransactionTable";
-import type { TransactionApiItem } from "../types/transaction";
+import type { Transaction, PageResponse } from "../types/transaction";
 import { regions, type Sido } from "../data/regions";
 
 
@@ -13,17 +13,15 @@ const getCurrentYearMonth = () => {
   ).padStart(2, "0")}`;
 };
 
-// 거래 금액
-const formatAmountInput = (value: string) => {
-  if (!value) return "";
-
-  return Number(value).toLocaleString();
-};
-
 export default function Transaction() {
   // 실거래건
   const [transactions, setTransactions] =
-    useState<TransactionApiItem[]>([]);
+    useState<PageResponse<Transaction>>({
+      items: [],
+      pageNo: 1,
+      pageSize: 0,
+      totalCount: 0,
+    });
   // 거래 년월
   const [dealYmd, setDealYmd] = useState(getCurrentYearMonth());
 
@@ -31,45 +29,27 @@ export default function Transaction() {
   const [sido, setSido] = useState<Sido>("서울특별시");
   const [sggCd, setSggCd] = useState("11110");
 
-  //  거래금액
-  const [minAmount, setMinAmount] = useState("");
-  const [maxAmount, setMaxAmount] = useState("");
-
   // 로딩
   const [loading, setLoading] = useState(false);
   // 오류
   const [error, setError] = useState("");
 
+  // 페이지
+  const [pageNo, setPageNo] = useState(1);
+
+
   // 실거래 조회
-  const getTransactions = async () => {
+  const getTransactions = async (page = pageNo) => {
     setLoading(true);
     setError("");
-
-    if (
-      minAmount !== "" &&
-      maxAmount !== "" &&
-      Number(minAmount) > Number(maxAmount)
-    ) {
-      setError("최소 거래금액은 최대 거래금액보다 클 수 없습니다.");
-      setLoading(false);
-      return;
-    }
 
     try {
       const formattedDealYmd = dealYmd.replace("-", "");
       const params = new URLSearchParams({
         sggCd,
         dealYmd: formattedDealYmd,
+        pageNo: page.toString(),
       });
-
-      if (minAmount) {
-        params.append("minAmount", minAmount);
-      }
-
-      if (maxAmount) {
-        params.append("maxAmount", maxAmount);
-      }
-
 
       const response = await fetch(
         `/api/transactions/getTransactions?${params.toString()}`
@@ -79,7 +59,7 @@ export default function Transaction() {
         throw new Error("실거래 조회 실패");
       }
 
-      const data: TransactionApiItem[] = await response.json();
+      const data: PageResponse<Transaction> = await response.json();
 
       setTransactions(data);
 
@@ -90,11 +70,20 @@ export default function Transaction() {
       setLoading(false);
     }
   };
+  // 페이지 변경
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1) return;
+
+    setPageNo(newPage);
+    getTransactions(newPage);
+  };
 
   // 조회시 서브밋
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    getTransactions();
+
+    setPageNo(1);
+    getTransactions(1);
   };
 
   // 초기화
@@ -102,11 +91,33 @@ export default function Transaction() {
     setSido("서울특별시");
     setSggCd("11110");
     setDealYmd(getCurrentYearMonth());
-    setMinAmount("");
-    setMaxAmount("");
-    setTransactions([]);
+    setTransactions({
+      items: [],
+      pageNo: 1,
+      pageSize: 0,
+      totalCount: 0,
+    });
+    setPageNo(1);
     setError("");
   };
+
+  // 총 페이지
+  const totalPages =
+    transactions.pageSize > 0
+      ? Math.ceil(transactions.totalCount / transactions.pageSize)
+      : 0;
+
+  const pageCount = 5;
+
+  let startPage = Math.max(1, pageNo - 2);
+  let endPage = Math.min(totalPages, startPage + pageCount - 1);
+
+  startPage = Math.max(1, endPage - pageCount + 1);
+
+  const pageNumbers = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, index) => startPage + index
+  );
 
   return (
     <div className="p-6">
@@ -131,11 +142,13 @@ export default function Transaction() {
             }}
             className="w-full rounded-lg border border-gray px-3 py-2 outline-none focus:ring-1 focus:ring-primary"
           >
-            {Object.keys(regions).map((region) => (
-              <option key={region} value={region}>
-                {region}
-              </option>
-            ))}
+            {(Object.keys(regions) as Sido[])
+              .sort((a, b) => a.localeCompare(b, "ko"))
+              .map((region) => (
+                <option key={region} value={region}>
+                  {region}
+                </option>
+              ))}
           </select>
         </div>
         <div>
@@ -147,11 +160,13 @@ export default function Transaction() {
             onChange={(e) => setSggCd(e.target.value)}
             className="w-full rounded-lg border border-gray px-3 py-2 outline-none focus:ring-1 focus:ring-primary"
           >
-            {regions[sido].map((region) => (
-              <option key={region.code} value={region.code}>
-                {region.name}
-              </option>
-            ))}
+            {[...regions[sido]]
+              .sort((a, b) => a.name.localeCompare(b.name, "ko"))
+              .map((region) => (
+                <option key={region.code} value={region.code}>
+                  {region.name}
+                </option>
+              ))}
           </select>
         </div>
         <div>
@@ -162,39 +177,6 @@ export default function Transaction() {
             type="month"
             value={dealYmd}
             onChange={(e) => setDealYmd(e.target.value)}
-            className="w-full rounded-lg border border-gray px-3 py-2 outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm text-text-secondary">
-            최소 거래금액 (만원)
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={formatAmountInput(minAmount)}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, "");
-              setMinAmount(value);
-            }}
-            placeholder="예: 50,000"
-            className="w-full rounded-lg border border-gray px-3 py-2 outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm text-text-secondary">
-            최대 거래금액 (만원)
-          </label>
-
-          <input
-            type="text"
-            inputMode="numeric"
-            value={formatAmountInput(maxAmount)}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, "");
-              setMaxAmount(value);
-            }}
-            placeholder="예: 150,000"
             className="w-full rounded-lg border border-gray px-3 py-2 outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
@@ -221,12 +203,46 @@ export default function Transaction() {
         </p>
       )}
       <div className="mb-3 text-sm text-text-secondary">
-        총 {transactions.length}건
+        총 {transactions.totalCount.toLocaleString()}건
       </div>
       <TransactionTable
-        transactions={transactions}
+        transactions={transactions.items}
         loading={loading}
       />
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => handlePageChange(pageNo - 1)}
+          disabled={pageNo === 1 || loading}
+          className="rounded-lg border border-gray px-4 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          이전
+        </button>
+
+        {pageNumbers.map((page) => (
+          <button
+            key={page}
+            type="button"
+            onClick={() => handlePageChange(page)}
+            disabled={loading}
+            className={`rounded-lg border px-4 py-2 ${page === pageNo
+              ? "bg-primary text-white"
+              : "border-gray hover:bg-primary/10"
+              }`}
+          >
+            {page}
+          </button>
+        ))}
+
+        <button
+          type="button"
+          onClick={() => handlePageChange(pageNo + 1)}
+          disabled={pageNo >= totalPages || loading}
+          className="rounded-lg border border-gray px-4 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          다음
+        </button>
+      </div>
     </div>
   );
 }

@@ -41,9 +41,11 @@ public class TransactionResponse {
     }
 
     // API 호출용
-    public static TransactionResponse from(TransactionApiItem item) {
+    public static TransactionResponse from(
+            TransactionApiItem item
+    ) {
         return TransactionResponse.builder()
-                .aptName(item.getAptNm())
+                .aptName(item.getAptName())
                 .dealAmount(
                         Long.parseLong(
                                 item.getDealAmount()
@@ -58,10 +60,12 @@ public class TransactionResponse {
                                 item.getDealDay()
                         )
                 )
-                .area(item.getExcluUseAr())
+                .area(item.getArea())
                 .floor(item.getFloor())
                 .buildYear(item.getBuildYear())
+                .dong(item.getDong())
                 .umdNm(item.getUmdNm())
+                .sggCd(item.getSggCd())
                 .build();
     }
 }

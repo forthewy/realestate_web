@@ -1,5 +1,5 @@
 export type Transaction = {
-  id: number;
+  id: number | null;
   aptName: string;
   dealAmount: number;
   dealDate: string;
@@ -9,21 +9,7 @@ export type Transaction = {
   dong: string | null;
   umdNm: string;
   sggCd: string;
-  sggName: string;
-};
-export type TransactionApiItem = {
-  aptNm: string;
-  dealAmount: string;
-
-  dealYear: number;
-  dealMonth: number;
-  dealDay: number;
-
-  excluUseAr: number | null;
-  floor: number | null;
-  buildYear: number | null;
-
-  umdNm: string;
+  sggName: string | null;
 };
 
 export type RegionStat = {
@@ -43,4 +29,11 @@ export type TransactionFilters = {
   maxAmount: string;
   fromDate: string;
   toDate: string;
+};
+
+export type PageResponse<T> = {
+  items: T[];
+  pageNo: number;
+  pageSize: number;
+  totalCount: number;
 };

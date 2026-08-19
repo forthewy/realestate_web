@@ -1,13 +1,14 @@
-import type { TransactionApiItem } from "../../types/transaction";
+import type { Transaction } from "../../types/transaction";
 
 type TransactionTableProps = {
-  transactions: TransactionApiItem[];
+  transactions: Transaction[];
   loading: boolean;
 };
 
 export default function TransactionTable({ transactions, loading }: TransactionTableProps) {
   if (loading) {
-    return <p className="py-8 text-center text-text-secondary">데이터를 불러오는 중...</p>;
+    return <p className="py-8 text-center text-text-secondary">데이
+      터를 불러오는 중...</p>;
   }
 
   if (transactions.length === 0) {
@@ -35,29 +36,23 @@ export default function TransactionTable({ transactions, loading }: TransactionT
               className="border-t border-gray hover:bg-primary/5"
             >
               <td className="px-4 py-3">
-                {tx.dealYear}.{tx.dealMonth}.{tx.dealDay}
+                {tx.dealDate}
               </td>
-
               <td className="px-4 py-3 font-medium">
-                {tx.aptNm}
+                {tx.aptName}
               </td>
-
               <td className="px-4 py-3">
                 {tx.umdNm}
               </td>
-
               <td className="px-4 py-3 font-semibold text-primary">
-                {tx.dealAmount}만원
+                {tx.dealAmount.toLocaleString()}만원
               </td>
-
               <td className="px-4 py-3">
-                {tx.excluUseAr ?? "-"}
+                {tx.area ?? "-"}
               </td>
-
               <td className="px-4 py-3">
                 {tx.floor ?? "-"}
               </td>
-
               <td className="px-4 py-3">
                 {tx.buildYear ?? "-"}
               </td>

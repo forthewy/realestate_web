@@ -19,7 +19,14 @@ public class TransactionApiResponse {
     @Getter
     @Setter
     public static class Body {
+
         private Items items;
+
+        private Integer numOfRows;
+
+        private Integer pageNo;
+
+        private Integer totalCount;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

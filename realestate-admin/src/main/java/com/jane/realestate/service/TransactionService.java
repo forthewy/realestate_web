@@ -1,15 +1,14 @@
 package com.jane.realestate.service;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.jane.realestate.dto.PageResponse;
 import com.jane.realestate.dto.TransactionResponse;
 import com.jane.realestate.dto.api.TransactionApiItem;
 import com.jane.realestate.dto.api.TransactionApiResponse;
 import com.jane.realestate.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -29,7 +28,8 @@ public class TransactionService {
     @Value("${public-data.service-key}")
     private String serviceKey;
 
-
+    // 한페이지 갯수
+    private static final int PAGE_SIZE = 30;
 
     // API 호출
     // 공공데이터에서 거래 가져오기
@@ -39,7 +39,7 @@ public class TransactionService {
 //    {
 //        RestClient restClient = RestClient.create();
 
-//      String response = restClient.get()
+    //      String response = restClient.get()
 //                    .uri(uriBuilder -> uriBuilder
 //                            .scheme("http")
 //                            .host("apis.data.go.kr")
@@ -55,11 +55,10 @@ public class TransactionService {
 //        return response;
 //    }
 //
-    public List<TransactionApiItem> getTransactionsFromApi(
+    public PageResponse<TransactionResponse> getTransactionsFromApi(
             String sggCd,
             String dealYmd,
-            Long minAmount,
-            Long maxAmount
+            String pageNo
     ) {
         try {
             String url =
@@ -67,7 +66,9 @@ public class TransactionService {
                             + "/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade"
                             + "?serviceKey=" + serviceKey
                             + "&LAWD_CD=" + sggCd
-                            + "&DEAL_YMD=" + dealYmd;
+                            + "&DEAL_YMD=" + dealYmd
+                            + "&numOfRows=" + PAGE_SIZE
+                            + "&pageNo=" + pageNo;
 
             HttpURLConnection connection =
                     (HttpURLConnection) URI.create(url)
@@ -94,11 +95,20 @@ public class TransactionService {
                             response,
                             TransactionApiResponse.class
                     );
+            List<TransactionResponse> transactions =
+                    apiResponse.getBody()
+                            .getItems()
+                            .getItem()
+                            .stream()
+                            .map(TransactionResponse::from)
+                            .toList();
 
-            return apiResponse
-                    .getBody()
-                    .getItems()
-                    .getItem();
+            return PageResponse.<TransactionResponse>builder()
+                    .items(transactions)
+                    .pageNo(apiResponse.getBody().getPageNo())
+                    .pageSize(apiResponse.getBody().getNumOfRows())
+                    .totalCount(apiResponse.getBody().getTotalCount())
+                    .build();
 
         } catch (Exception e) {
             throw new RuntimeException("공공데이터 API 호출 실패", e);
