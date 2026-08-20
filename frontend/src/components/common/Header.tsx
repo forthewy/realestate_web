@@ -26,7 +26,6 @@ export default function Header() {
                 <Link to="/">RealEstate</Link>
             </div>
             <nav className="mx-auto ml-8 flex shrink-0 gap-8 text-2xl font-medium">
-                <nav className="flex shrink-0 gap-8 mx-auto ml-8 text-2xl font-medium">
                     <Link
                         to="/"
                         className={linkStyle}>
@@ -50,7 +49,6 @@ export default function Header() {
                     ) : (
                         <Link to="/login" className={linkStyle}>로그인</Link>
                     )}
-                </nav>
                 {/* 검색 */}
                 <div className="flex items-center gap-2 px-6">
                     <input

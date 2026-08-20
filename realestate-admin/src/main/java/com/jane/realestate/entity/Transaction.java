@@ -39,11 +39,19 @@ public class Transaction {
 
     private String dong;
 
+    private String jibun;
+
     @Column(nullable = false)
     private String umdNm;
 
     @Column(nullable = false, length = 5)
     private String sggCd;
+
+    private String dealType;
+
+    private String agentRegion;
+
+    private LocalDate registrationDate;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
