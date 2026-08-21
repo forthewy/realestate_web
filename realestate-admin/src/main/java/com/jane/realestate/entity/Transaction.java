@@ -49,10 +49,6 @@ public class Transaction {
 
     private String dealType;
 
-    private String agentRegion;
-
-    private LocalDate registrationDate;
-
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

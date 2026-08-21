@@ -1,6 +1,5 @@
 package com.jane.realestate.service;
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.jane.realestate.dto.PageResponse;
 import com.jane.realestate.dto.TransactionResponse;
 import com.jane.realestate.dto.api.TransactionApiResponse;
@@ -8,6 +7,7 @@ import com.jane.realestate.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import tools.jackson.dataformat.xml.XmlMapper;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

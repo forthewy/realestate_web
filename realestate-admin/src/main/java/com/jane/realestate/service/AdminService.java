@@ -8,11 +8,6 @@ import com.jane.realestate.repository.RegionRepository;
 import com.jane.realestate.repository.TransactionRepository;
 import com.jane.realestate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-//import org.apache.poi.ss.usermodel.DataFormatter;
-//import org.apache.poi.ss.usermodel.Row;
-//import org.apache.poi.ss.usermodel.Sheet;
-//import org.apache.poi.ss.usermodel.Workbook;
-//import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -126,6 +121,8 @@ public class AdminService {
                         .dealDate(dealDate)
                         .umdNm(umdNm)
                         .sggCd(sggCd)
+                        .jibun(formatter.formatCellValue(row.getCell(2)).trim())
+                        .dealType(formatter.formatCellValue(row.getCell(17)).trim())
                         .build();
 
                 transactions.add(transaction);
