@@ -1,6 +1,6 @@
 import { useState } from "react";
 import AdminCalendar from "../components/AdminCalendar";
-import { apiFetch } from "../../services/api";
+import { importExcel } from "../../services/api";
 
 export default function AdminImport() {
     const [file, setFile] = useState<File | null>(null);
@@ -12,10 +12,7 @@ export default function AdminImport() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await apiFetch("/api/admin/import", {
-            method: "POST",
-            body: formData,
-        });
+        const response = await importExcel(formData);
 
         if (!response.ok) {
             alert("업로드에 실패했습니다.");

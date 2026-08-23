@@ -1,4 +1,4 @@
-import { apiFetch } from "../../services/api"
+import { register, checkUsername as checkUsernameRequest, checkPhone as checkPhoneRequest } from "../../services/api"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -35,14 +35,11 @@ export default function Register() {
             return;
         }
 
-        const response = await apiFetch("/api/auth/register", {
-            method: "POST",
-            body: JSON.stringify({
-                name,
-                phone,
-                username,
-                password,
-            }),
+        const response = await register({
+            name,
+            phone,
+            username,
+            password,
         });
 
         if (!response.ok) {
@@ -64,9 +61,7 @@ export default function Register() {
             setIsUsernameChecked(false);
             return;
         }
-        const response = await apiFetch(
-            `/api/auth/check-username?username=${username}`
-        );
+        const response = await checkUsernameRequest(username);
 
         const available: boolean = await response.json();
 
@@ -87,9 +82,7 @@ export default function Register() {
             return;
         }
 
-        const response = await apiFetch(
-            `/api/auth/check-phone?phone=${phone}`
-        );
+        const response = await checkPhoneRequest(phone);
 
         const available: boolean = await response.json();
 

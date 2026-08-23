@@ -2,6 +2,7 @@ import { useState } from "react";
 import TransactionTable from "../components/TransactionTable";
 import type { Transaction, PageResponse } from "../types/transaction";
 import { regions, type Sido } from "../data/regions";
+import { getTransactions as fetchTransactions } from "../../services/api";
 
 
 // 거래 년월 초기화 (이번달)
@@ -45,21 +46,7 @@ export default function Transaction() {
 
     try {
       const formattedDealYmd = dealYmd.replace("-", "");
-      const params = new URLSearchParams({
-        sggCd,
-        dealYmd: formattedDealYmd,
-        pageNo: page.toString(),
-      });
-
-      const response = await fetch(
-        `/api/transactions/getTransactions?${params.toString()}`
-      );
-
-      if (!response.ok) {
-        throw new Error("실거래 조회 실패");
-      }
-
-      const data: PageResponse<Transaction> = await response.json();
+      const data = await fetchTransactions(sggCd, formattedDealYmd, page);
 
       setTransactions(data);
 

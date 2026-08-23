@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { apiFetch } from "../../services/api"
+import { login as loginRequest } from "../../services/api"
 
 export default function LogIn() {
     const [username, setUsername] = useState("");
@@ -24,12 +24,9 @@ export default function LogIn() {
     const loginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const response = await apiFetch("/api/auth/login", {
-            method: "POST",
-            body: JSON.stringify({
-                username,
-                password,
-            }),
+        const response = await loginRequest({
+            username,
+            password,
         });
 
         if (!response.ok) {
@@ -55,7 +52,7 @@ export default function LogIn() {
                         Real Estate 실거래가 대시보드 웹
                     </p>
                 </div>
-                <form onSubmit={loginSubmit}>
+                <form onSubmit={loginSubmit} autoComplete="on">
                     <div className="flex flex-col gap-2">
                         <label className="text-xl font-medium text-text-secondary">
                             아이디
@@ -63,6 +60,8 @@ export default function LogIn() {
                         <input
                             className="rounded-lg border border-gray px-4 py-3 outline-none focus:ring-1"
                             type="text"
+                            name="username"
+                            autoComplete="username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                         />
@@ -74,6 +73,8 @@ export default function LogIn() {
                         <input
                             className="rounded-lg border border-gray  px-4 py-3 outline-none focus:ring-1"
                             type="password"
+                            name="password"
+                            autoComplete="current-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />

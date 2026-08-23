@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { User } from "../types/user";
-import { apiFetch } from "../../services/api";
+import { getAdminUsers } from "../../services/api";
 import UserTable from "../components/UserTable";
 
 export default function AdminUsers() {
@@ -14,7 +14,7 @@ export default function AdminUsers() {
 
     const loadUsers = async () => {
 
-        const response = await apiFetch("/api/admin/users");
+        const response = await getAdminUsers();
 
         if (!response.ok) {
             alert("회원 정보를 불러오지 못했습니다.");
