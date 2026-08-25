@@ -1,5 +1,6 @@
 package com.jane.realestate.service;
 
+import com.jane.realestate.dto.ApartmentMapResponse;
 import com.jane.realestate.dto.PageResponse;
 import com.jane.realestate.dto.TransactionResponse;
 import com.jane.realestate.dto.api.TransactionApiResponse;
@@ -8,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import tools.jackson.dataformat.xml.XmlMapper;
-
+import com.jane.realestate.dto.ApartmentMapResponse;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -123,5 +124,35 @@ public class TransactionService {
             LocalDate fromDate,
             LocalDate toDate) {
         return List.of();
+    }
+
+    public List<ApartmentMapResponse> getMapTransactions(
+            Double minLat,
+            Double maxLat,
+            Double minLng,
+            Double maxLng,
+            Long minAmount,
+            Long maxAmount
+    ) {
+        return transactionRepository.findMapTransactions(
+                        minLat,
+                        maxLat,
+                        minLng,
+                        maxLng,
+                        minAmount,
+                        maxAmount
+                )
+                .stream()
+                .map(row -> new ApartmentMapResponse(
+                        (Long) row[0],
+                        (String) row[1],
+                        (Double) row[2],
+                        (Double) row[3],
+                        (Long) row[4],
+                        (Long) row[5],
+                        (Double) row[6],
+                        (Integer) row[7]
+                ))
+                .toList();
     }
 }

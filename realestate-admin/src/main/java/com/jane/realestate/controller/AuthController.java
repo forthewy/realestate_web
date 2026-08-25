@@ -21,7 +21,7 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request) {
 
-        System.out.println(request.getUsername());
+        System.out.println(request.username());
 
         return ResponseEntity.ok(authService.login(request));
     }
@@ -31,7 +31,7 @@ public class AuthController {
     public ResponseEntity<LoginResponse> register(
             @Valid @RequestBody RegisterRequest request) {
 
-        System.out.println(request.getUsername());
+        System.out.println(request.username());
 
         return ResponseEntity.ok(authService.register(request));
     }

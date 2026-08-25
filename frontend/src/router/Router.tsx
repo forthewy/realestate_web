@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Layout from "../components/common/Layout";
 import Dashboard from "../dashboard/pages/Dashboard";
-import Transaction from "../transaction/pages/Transaction";
 import LogIn from "../auth/pages/LogIn";
 import Register from "../auth/pages/Register";
 import ProtectedRoute from "../auth/components/ProtectedRoute";
@@ -12,6 +11,7 @@ import AdminLayout from "../admin/components/AdminLayout";
 import AdminHome from "../admin/pages/AdminHome";
 import AdminUsers from "../admin/pages/AdminUsers";
 import AdminImport from "../admin/pages/AdminImport";
+import TransactionMap from "../dashboard/pages/TransactionMap";
 
 export default function Router() {
     return (
@@ -22,7 +22,7 @@ export default function Router() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/login" element={<LogIn />} />
-                    <Route path="/transaction" element={<Transaction />} />
+                    <Route path="/transaction" element={<TransactionMap />} />
                     {/* 로그인 사용자 */}Z
                     <Route
                         path="/mypage"

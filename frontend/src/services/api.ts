@@ -1,4 +1,5 @@
 import type { LoginRequest, RegisterRequest } from "../auth/types/auth";
+import type { ApartmentMapItem } from "../dashboard/components/KakaoMap";
 import type { PageResponse, Transaction } from "../transaction/types/transaction";
 
 export async function apiFetch(
@@ -65,6 +66,26 @@ export function checkPhone(phone: string) {
 export function getTransactions(sggCd: string, dealYmd: string, pageNo: number) {
     return apiJson<PageResponse<Transaction>>(
         `/api/transactions/getTransactions${buildQuery({ sggCd, dealYmd, pageNo })}`
+    );
+}
+
+export function getMapTransactions(
+    minLat: number,
+    maxLat: number,
+    minLng: number,
+    maxLng: number,
+    minAmount?: string,
+    maxAmount?: string
+) {
+    return apiJson<ApartmentMapItem[]>(
+        `/api/transactions/map${buildQuery({
+            minLat,
+            maxLat,
+            minLng,
+            maxLng,
+            minAmount,
+            maxAmount,
+        })}`
     );
 }
 

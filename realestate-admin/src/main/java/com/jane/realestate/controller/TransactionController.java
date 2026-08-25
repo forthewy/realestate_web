@@ -1,5 +1,6 @@
 package com.jane.realestate.controller;
 
+import com.jane.realestate.dto.ApartmentMapResponse;
 import com.jane.realestate.dto.TransactionResponse;
 import com.jane.realestate.dto.api.TransactionApiItem;
 import com.jane.realestate.service.TransactionService;
@@ -51,6 +52,27 @@ public class TransactionController {
                         sggCd,
                         dealYmd,
                         pageNo
+                )
+        );
+    }
+
+    @GetMapping("/map")
+    public ResponseEntity<List<ApartmentMapResponse>> getMapTransactions(
+            @RequestParam Double minLat,
+            @RequestParam Double maxLat,
+            @RequestParam Double minLng,
+            @RequestParam Double maxLng,
+            @RequestParam(required = false) Long minAmount,
+            @RequestParam(required = false) Long maxAmount
+    ) {
+        return ResponseEntity.ok(
+                transactionService.getMapTransactions(
+                        minLat,
+                        maxLat,
+                        minLng,
+                        maxLng,
+                        minAmount,
+                        maxAmount
                 )
         );
     }

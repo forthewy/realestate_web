@@ -51,4 +51,38 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     boolean existsByAptNameAndDealDateAndDealAmountAndUmdNm(
             String aptName, LocalDate dealDate, Long dealAmount, String umdNm
     );
+
+    @Query("""
+        select
+            a.id,
+            a.aptName,
+            a.latitude,
+            a.longitude,
+            max(t.dealAmount),
+            count(t),
+            max(t.area),
+            max(t.floor)
+        from Apartment a
+        join Transaction t
+          on t.sggCd = a.sggCd
+         and t.umdNm = a.umdNm
+         and t.jibun = a.jibun
+        where a.latitude between :minLat and :maxLat
+          and a.longitude between :minLng and :maxLng
+          and (:minAmount is null or t.dealAmount >= :minAmount)
+          and (:maxAmount is null or t.dealAmount <= :maxAmount)
+        group by
+            a.id,
+            a.aptName,
+            a.latitude,
+            a.longitude
+        """)
+    List<Object[]> findMapTransactions(
+            @Param("minLat") Double minLat,
+            @Param("maxLat") Double maxLat,
+            @Param("minLng") Double minLng,
+            @Param("maxLng") Double maxLng,
+            @Param("minAmount") Long minAmount,
+            @Param("maxAmount") Long maxAmount
+    );
 }

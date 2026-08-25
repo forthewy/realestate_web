@@ -21,11 +21,11 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() ->
                         new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다."));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
         }
 
@@ -34,19 +34,19 @@ public class AuthService {
 
     public LoginResponse register(RegisterRequest request) {
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(request.username())) {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
 
-        if (userRepository.existsByPhone(request.getPhone())) {
+        if (userRepository.existsByPhone(request.phone())) {
             throw new IllegalArgumentException("이미 가입된 휴대폰 번호입니다.");
         }
 
         User user = User.builder()
-                .name(request.getName())
-                .phone(request.getPhone())
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.name())
+                .phone(request.phone())
+                .username(request.username())
+                .password(passwordEncoder.encode(request.password()))
                 .role(Role.USER)
                 .build();
 
@@ -66,20 +66,20 @@ public class AuthService {
                 jwtProvider.createRefreshToken(
                         user.getUsername());
 
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .username(user.getUsername())
-                .role(user.getRole())
-                .build();
+        return new LoginResponse(
+                accessToken,
+                refreshToken,
+                user.getUsername(),
+                user.getRole()
+        );
     }
     // 아이디 중복 확인
-    public boolean checkPhone(String phone) {
-        return !userRepository.existsByPhone(phone);
+    public boolean checkUsername(String username) {
+        return !userRepository.existsByUsername(username);
     }
 
     // 핸드폰 번호 중복 확인
-    public boolean checkUsername(String username) {
-        return !userRepository.existsByUsername(username);
+    public boolean checkPhone(String phone) {
+        return !userRepository.existsByPhone(phone);
     }
 }

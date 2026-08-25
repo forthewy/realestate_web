@@ -1,4 +1,4 @@
-import MapPage from "../components/Map";
+import MapPage from "./TransactionMap";
 
 export default function Dashboard() {
   return (
