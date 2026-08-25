@@ -41,6 +41,11 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (!"access".equals(jwtProvider.getTokenType(token))) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
 
         String username = jwtProvider.getUsername(token);
         String role = jwtProvider.getRole(token);
@@ -57,10 +62,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        {
-
-            filterChain.doFilter(request, response);
-        }
+        filterChain.doFilter(request, response);
 
     }
 }

@@ -18,19 +18,9 @@ export default function Sidebar() {
           실거래
         </Link>
         <Link
-          to="/transaction"
+          to="/mypage"
           className={linkStyle}>
-          사용자
-        </Link>
-        <Link
-          to="/settings"
-          className={linkStyle}>
-          설정
-        </Link>
-        <Link
-          to=""
-          className={linkStyle}>
-          About
+          내 정보
         </Link>
       </nav>
     </aside>

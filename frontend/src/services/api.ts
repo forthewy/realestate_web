@@ -8,15 +8,57 @@ export async function apiFetch(
 ) {
     const token = localStorage.getItem("accessToken");
     const isFormData = options.body instanceof FormData;
+    const isAuthApi = url.startsWith("/api/auth/");
 
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...(!isFormData && { "Content-Type": "application/json" }),
+            ...(!isAuthApi && token && {
+                Authorization: `Bearer ${token}`,
+            }),
+            ...options.headers,
+        },
+    });
+
+    // 인증 API 자체는 Refresh 대상에서 제외
+    if (response.status !== 401 || isAuthApi) {
+        return response;
+    }
+
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    if (!refreshToken) {
+        return response;
+    }
+
+    // Access Token 재발급
+    const refreshResponse = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!refreshResponse.ok) {
+        return response;
+    }
+
+    const data: { accessToken: string } = await refreshResponse.json();
+
+    localStorage.setItem("accessToken", data.accessToken);
+
+    // 실패했던 원래 요청 재시도
+    // 실패했던 원래 요청 재시도
     return fetch(url, {
         ...options,
         headers: {
             ...(!isFormData && { "Content-Type": "application/json" }),
-            ...(token && { Authorization: `Bearer ${token}` }),
             ...options.headers,
-        }
-    })
+            Authorization: `Bearer ${data.accessToken}`,
+        },
+    });
 }
 
 export async function apiJson<T>(url: string, options: RequestInit = {}): Promise<T> {
@@ -63,6 +105,30 @@ export function checkPhone(phone: string) {
     return apiFetch(`/api/auth/check-phone${buildQuery({ phone })}`);
 }
 
+export type UserResponse = {
+    id: number;
+    username: string;
+    name: string;
+    phone: string;
+    role: string;
+};
+
+export function getMyPage() {
+    return apiJson<UserResponse>("/api/users/me");
+}
+
+export type UpdateUserRequest = {
+    phone: string;
+    password: string;
+};
+
+export function updateMyPage(body: UpdateUserRequest) {
+    return apiFetch("/api/users/me", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+    });
+}
+
 export function getTransactions(sggCd: string, dealYmd: string, pageNo: number) {
     return apiJson<PageResponse<Transaction>>(
         `/api/transactions/getTransactions${buildQuery({ sggCd, dealYmd, pageNo })}`
@@ -99,3 +165,5 @@ export function importExcel(formData: FormData) {
         body: formData,
     });
 }
+
+

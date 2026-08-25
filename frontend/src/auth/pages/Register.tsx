@@ -13,6 +13,7 @@ export default function Register() {
     const [isUsernameChecked, setIsUsernameChecked] = useState(false);
     const [phoneMessage, setPhoneMessage] = useState("");
     const [isPhoneChecked, setIsPhoneChecked] = useState(false);
+    const [error, setError] = useState("");
 
     const { login } = useAuth();
 
@@ -37,13 +38,13 @@ export default function Register() {
 
         const response = await register({
             name,
-            phone,
+            phone: phone.replaceAll("-", ""),
             username,
             password,
         });
-
         if (!response.ok) {
-            alert("회원가입에 실패했습니다.");
+            const message = await response.text();
+            setError(message);
             return;
         }
 
@@ -149,6 +150,8 @@ export default function Register() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                minLength={8}
+                                required
                             />
                         </div>
                         <div className="flex flex-col gap-2">
@@ -160,6 +163,8 @@ export default function Register() {
                                 type="password"
                                 value={passwordConfirm}
                                 onChange={(e) => setPasswordConfirm(e.target.value)}
+                                minLength={8}
+                                required
                             />
                         </div>
                         <div className="flex flex-col gap-2">
@@ -188,6 +193,8 @@ export default function Register() {
                                         setIsPhoneChecked(false);
                                     }}
                                     placeholder="01012345678"
+                                    required
+                                    pattern="01[016789]-?[0-9]{3,4}-?[0-9]{4}"
                                 />
                                 <button
                                     type="button"
@@ -206,6 +213,11 @@ export default function Register() {
                                     }`}
                             >
                                 {phoneMessage}
+                            </p>
+                        )}
+                        {error && (
+                            <p className="text-m text-red-500">
+                                {error}
                             </p>
                         )}
                         {/* 회원가입 버튼 */}

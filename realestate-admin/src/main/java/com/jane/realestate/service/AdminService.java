@@ -37,16 +37,15 @@ public class AdminService {
 
     public List<UserResponse> getUsers() {
 
-        return userRepository.findAll()
+        return (List<UserResponse>) userRepository.findAll()
                 .stream()
-                .map(user -> UserResponse.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .username(user.getUsername())
-                        .phone(user.getPhone())
-                        .role(user.getRole())
-                        .createdAt(user.getCreatedAt())
-                        .build())
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getName(),
+                        user.getPhone(),
+                        user.getRole()
+                ))
                 .toList();
     }
 

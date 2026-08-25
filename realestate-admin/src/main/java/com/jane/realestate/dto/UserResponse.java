@@ -6,14 +6,10 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Builder
-public class UserResponse {
-
-    private Long id;
-    private String name;
-    private String username;
-    private String phone;
-    private Role role;
-    private LocalDateTime createdAt;
-}
+public record UserResponse(
+        Long id,
+        String username,
+        String name,
+        String phone,
+        Role role
+) {}

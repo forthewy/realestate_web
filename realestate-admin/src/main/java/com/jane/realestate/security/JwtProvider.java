@@ -29,10 +29,10 @@ public class JwtProvider {
     public String createAccessToken(String username, String role) {
         Date now = new Date();
         Date expireTime = new Date(now.getTime() + accessTokenExpiration);
-
         return Jwts.builder()
                 .subject(username)
                 .claim("role",role)
+                .claim("type", "access")
                 .issuedAt(now)
                 .expiration(expireTime)
                 .signWith(getSigningKey())
@@ -44,6 +44,7 @@ public class JwtProvider {
         Date expireTime = new Date(now.getTime() + refreshTokenExpiration);
 
         return Jwts.builder()
+                .claim("type", "refresh")
                 .subject(username)
                 .issuedAt(now)
                 .expiration(expireTime)
@@ -60,6 +61,14 @@ public class JwtProvider {
         }
     }
 
+    private Claims getClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
     public String getUsername(String token) {
         return getClaims(token).getSubject();
     }
@@ -68,11 +77,7 @@ public class JwtProvider {
         return  getClaims(token).get("role", String.class);
     }
 
-    private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public String getTokenType(String token) {
+        return getClaims(token).get("type", String.class);
     }
 }

@@ -3,7 +3,6 @@ package com.jane.realestate.entity;
 import com.jane.realestate.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class User {
+public class    User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,10 +40,6 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public void changePassword(String password) {
-        this.password = password;
-    }
-
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
@@ -54,5 +49,13 @@ public class User {
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public void updatePhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
     }
 }
