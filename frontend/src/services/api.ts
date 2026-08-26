@@ -50,7 +50,6 @@ export async function apiFetch(
     localStorage.setItem("accessToken", data.accessToken);
 
     // 실패했던 원래 요청 재시도
-    // 실패했던 원래 요청 재시도
     return fetch(url, {
         ...options,
         headers: {
