@@ -86,6 +86,7 @@ public class AuthService {
                 user.getRole()
         );
     }
+
     // 아이디 중복 확인
     public boolean checkUsername(String username) {
         return !userRepository.existsByUsername(username);
@@ -96,6 +97,7 @@ public class AuthService {
         return !userRepository.existsByPhone(phone);
     }
 
+    // 토큰 refresh
     public AccessTokenResponse refresh(String refreshToken) {
 
         if (!jwtProvider.validateToken(refreshToken)) {

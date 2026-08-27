@@ -1,5 +1,5 @@
 import type { LoginRequest, RegisterRequest } from "../auth/types/auth";
-import type { ApartmentMapItem } from "../dashboard/components/KakaoMap";
+import type { ApartmentMapItem } from "../map/components/KakaoMap";
 import type { PageResponse, Transaction } from "../transaction/types/transaction";
 
 // 경로 연결

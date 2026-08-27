@@ -21,10 +21,9 @@ public class TransactionResponse {
     private String dong;
     private String umdNm;
     private String sggCd;
-    private String sggName;
 
     // DB 용
-    public static TransactionResponse from(Transaction transaction, String sggName) {
+    public static TransactionResponse from(Transaction transaction) {
         return TransactionResponse.builder()
                 .id(transaction.getId())
                 .aptName(transaction.getAptName())
@@ -36,7 +35,6 @@ public class TransactionResponse {
                 .dong(transaction.getDong())
                 .umdNm(transaction.getUmdNm())
                 .sggCd(transaction.getSggCd())
-                .sggName(sggName)
                 .build();
     }
 

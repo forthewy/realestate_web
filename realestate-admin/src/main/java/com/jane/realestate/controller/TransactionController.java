@@ -4,6 +4,7 @@ import com.jane.realestate.dto.ApartmentMapResponse;
 import com.jane.realestate.dto.TransactionResponse;
 import com.jane.realestate.dto.api.TransactionApiItem;
 import com.jane.realestate.service.TransactionApiService;
+import com.jane.realestate.service.TransactionDbService;
 import com.jane.realestate.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,43 +18,26 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/transactions")
 @RequiredArgsConstructor
 public class TransactionController {
 
-    // DB 용
+    // DB / API 분기
     private final TransactionService transactionService;
 
-    // API 호출용
-    private final TransactionApiService transactionApiService;
+    // DB 직접 조회 (지도용)
+    private final TransactionDbService transactionDbService;
 
-
-    @GetMapping
-    public ResponseEntity<List<TransactionResponse>> getTransactions(
-            @RequestParam(required = false) String sggCd,
-            @RequestParam(required = false) String umdNm,
-            @RequestParam(required = false) Long minAmount,
-            @RequestParam(required = false) Long maxAmount,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate
-    ) {
-        return ResponseEntity.ok(
-                transactionService.getTransactions(sggCd, umdNm, minAmount, maxAmount, fromDate, toDate)
-        );
-    }
-
-    // API 호출
-    // 공공데이터에서 거래 가져오기
+    // 실거래 조회
     @GetMapping("/getTransactions")
-    public ResponseEntity<?> getTransactionsFromApi(
+    public ResponseEntity<?> getTransactions(
             @RequestParam String sggCd,
             @RequestParam String dealYmd,
-            @RequestParam(defaultValue = "1") String pageNo
+            @RequestParam(defaultValue = "1") int pageNo
     ) {
         return ResponseEntity.ok(
-                transactionApiService.getTransactions(
+                transactionService.getTransactions(
                         sggCd,
                         dealYmd,
                         pageNo
@@ -61,6 +45,7 @@ public class TransactionController {
         );
     }
 
+    // 지도용 DB 조회
     @GetMapping("/map")
     public ResponseEntity<List<ApartmentMapResponse>> getMapTransactions(
             @RequestParam Double minLat,
@@ -71,7 +56,7 @@ public class TransactionController {
             @RequestParam(required = false) Long maxAmount
     ) {
         return ResponseEntity.ok(
-                transactionService.getMapTransactions(
+                transactionDbService.getMapTransactions(
                         minLat,
                         maxLat,
                         minLng,

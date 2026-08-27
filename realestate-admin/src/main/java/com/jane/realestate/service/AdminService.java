@@ -23,7 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -54,10 +57,14 @@ public class AdminService {
 
     // 엑셀 업로드
     public void importExcel(MultipartFile file) {
+        long startTime = System.nanoTime();
 
         int skippedCount = 0;
+        int totalRows = 0;
+
         DataFormatter formatter = new DataFormatter();
 
+        // 지역코드는 import 시 반드시 필요하므로 메모리에 한 번 로드
         Map<String, String> regionMap = regionRepository.findAll()
                 .stream()
                 .collect(Collectors.toMap(
@@ -65,24 +72,16 @@ public class AdminService {
                         Region::getCode
                 ));
 
-        Map<String, Apartment> apartmentMap = apartmentRepository.findAll()
-                .stream()
-                .collect(Collectors.toMap(
-                        apartment ->
-                                apartment.getSggCd()
-                                        + "|"
-                                        + apartment.getUmdNm()
-                                        + "|"
-                                        + apartment.getJibun(),
-                        apartment -> apartment
-                ));
-
         List<Transaction> transactions = new ArrayList<>();
-        List<Apartment> newApartments = new ArrayList<>();
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
 
             Sheet sheet = workbook.getSheetAt(0);
+
+            // 실제 데이터 행 수
+            totalRows = Math.max(0, sheet.getLastRowNum() - 13);
+
+            // 조회 기간
             String searchPeriod =
                     formatter.formatCellValue(
                             sheet.getRow(8).getCell(0)
@@ -98,8 +97,8 @@ public class AdminService {
             LocalDate startDate = LocalDate.parse(dates[0].trim());
             LocalDate endDate = LocalDate.parse(dates[1].trim());
 
-//            for (int i = 14; i <= sheet.getLastRowNum(); i++) {
-            for (int i = 14; i <= 24; i++) {
+            // 14번째 행부터 실제 데이터
+            for (int i = 14; i <= sheet.getLastRowNum(); i++) {
 
                 Row row = sheet.getRow(i);
 
@@ -107,7 +106,7 @@ public class AdminService {
                     continue;
                 }
 
-                // 서울특별시 동대문구 전농동
+                // 예: 서울특별시 동대문구 전농동
                 String address =
                         formatter.formatCellValue(row.getCell(1)).trim();
 
@@ -127,82 +126,39 @@ public class AdminService {
                 String sggCd =
                         regionMap.get(regionName);
 
+                // 지원하지 않는 지역코드
                 if (sggCd == null) {
                     skippedCount++;
                     continue;
                 }
 
-                // 아파트 관련 값
                 String jibun =
                         formatter.formatCellValue(row.getCell(2)).trim();
 
                 String aptName =
                         formatter.formatCellValue(row.getCell(5)).trim();
 
-                String fullAddress =
-                        address + " " + jibun;
-
-                /*
-                 * 아파트 식별 키
-                 * 예:
-                 * 11230|전농동|620-56
-                 */
-                String apartmentKey =
-                        sggCd
-                                + "|"
-                                + umdNm
-                                + "|"
-                                + jibun;
-
-                Apartment apartment =
-                        apartmentMap.get(apartmentKey);
-
-                if (apartment == null) {
-
-                    KakaoGeocodingService.Coordinate coordinate =
-                            kakaoGeocodingService.getCoordinate(fullAddress);
-
-                    apartment = Apartment.builder()
-                            .aptName(aptName)
-                            .sggCd(sggCd)
-                            .umdNm(umdNm)
-                            .jibun(jibun)
-                            .address(fullAddress)
-                            .latitude(
-                                    coordinate != null
-                                            ? coordinate.latitude()
-                                            : null
-                            )
-                            .longitude(
-                                    coordinate != null
-                                            ? coordinate.longitude()
-                                            : null
-                            )
-                            .build();
-
-                    apartmentMap.put(apartmentKey, apartment);
-                    newApartments.add(apartment);
-                }
-
-                // 거래 날짜
+                // 거래 년월
                 String yearMonth =
                         formatter.formatCellValue(row.getCell(7)).trim();
 
-                int day = Integer.parseInt(
-                        formatter.formatCellValue(
-                                row.getCell(8)
-                        ).trim()
-                );
+                int day =
+                        Integer.parseInt(
+                                formatter.formatCellValue(
+                                        row.getCell(8)
+                                ).trim()
+                        );
 
-                LocalDate dealDate = LocalDate.of(
-                        Integer.parseInt(
-                                yearMonth.substring(0, 4)
-                        ),
-                        Integer.parseInt(
-                                yearMonth.substring(4, 6)
-                        ),
-                        day
-                );
+                LocalDate dealDate =
+                        LocalDate.of(
+                                Integer.parseInt(
+                                        yearMonth.substring(0, 4)
+                                ),
+                                Integer.parseInt(
+                                        yearMonth.substring(4, 6)
+                                ),
+                                day
+                        );
 
                 Transaction transaction =
                         Transaction.builder()
@@ -267,15 +223,10 @@ public class AdminService {
                 transactions.add(transaction);
             }
 
-            apartmentRepository.saveAll(
-                    newApartments
-            );
+            // 거래 일괄 저장
+            transactionRepository.saveAll(transactions);
 
-            transactionRepository.saveAll(
-                    transactions
-            );
-
-            // 임포트 내역 저장
+            // Import 이력 저장
             TransactionImport transactionImport =
                     TransactionImport.builder()
                             .startDate(startDate)
@@ -286,28 +237,33 @@ public class AdminService {
 
             transactionImportRepository.save(transactionImport);
 
-            System.out.println(
-                    "신규 아파트 저장: "
-                            + newApartments.size()
-                            + "건"
-            );
-
-            System.out.println(
-                    "거래 저장: "
-                            + transactions.size()
-                            + "건"
-            );
-
-            System.out.println(
-                    "지역코드 미지원으로 제외: "
-                            + skippedCount
-                            + "건"
-            );
-
         } catch (IOException e) {
             throw new RuntimeException(
                     "Excel 파일을 읽을 수 없습니다.",
                     e
+            );
+
+        } finally {
+            long elapsedNanos =
+                    System.nanoTime() - startTime;
+
+            double elapsedSeconds =
+                    elapsedNanos / 1_000_000_000.0;
+
+            log.info(
+                    """
+                    Excel import completed
+                    - file: {}
+                    - rows: {}
+                    - inserted transactions: {}
+                    - skipped: {}
+                    - elapsed: {} sec
+                    """,
+                    file.getOriginalFilename(),
+                    totalRows,
+                    transactions.size(),
+                    skippedCount,
+                    String.format("%.2f", elapsedSeconds)
             );
         }
     }
@@ -436,4 +392,41 @@ public class AdminService {
     public void cancelStoredMonth(String yearMonth) {
         transactionStoredMonthRepository.deleteByYearMonth(yearMonth);
     }
+
+//    private Apartment findOrCreateApartment(
+//            Map<String, Apartment> apartmentMap,
+//            List<Apartment> newApartments,
+//            String aptName,
+//            String sggCd,
+//            String umdNm,
+//            String jibun,
+//            String fullAddress
+//    ) {
+//        String apartmentKey =
+//                sggCd
+//                        + "|"
+//                        + umdNm
+//                        + "|"
+//                        + jibun;
+//
+//        Apartment apartment =
+//                apartmentMap.get(apartmentKey);
+//
+//        if (apartment != null) {
+//            return apartment;
+//        }
+//
+//        apartment = createApartment(
+//                aptName,
+//                sggCd,
+//                umdNm,
+//                jibun,
+//                fullAddress
+//        );
+//
+//        apartmentMap.put(apartmentKey, apartment);
+//        newApartments.add(apartment);
+//
+//        return apartment;
+//    }
 }

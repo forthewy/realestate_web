@@ -45,8 +45,7 @@ export default function TransactionsPage() {
     setError("");
 
     try {
-      const formattedDealYmd = dealYmd.replace("-", "");
-      const data = await fetchTransactions(sggCd, formattedDealYmd, page);
+      const data = await fetchTransactions(sggCd, dealYmd, page);
 
       setTransactions(data);
 

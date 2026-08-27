@@ -26,7 +26,7 @@ public class TransactionApiService {
     public PageResponse<TransactionResponse> getTransactions(
             String sggCd,
             String dealYmd,
-            String pageNo
+            int pageNo
     ) {
         try {
             String url =

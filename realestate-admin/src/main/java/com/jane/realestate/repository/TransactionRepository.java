@@ -1,6 +1,8 @@
 package com.jane.realestate.repository;
 
 import com.jane.realestate.entity.Transaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +12,7 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
+    // 지도용 최대최소
     @Query("""
             SELECT t FROM Transaction t
             WHERE (:sggCd IS NULL OR t.sggCd = :sggCd)
@@ -84,5 +87,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("maxLng") Double maxLng,
             @Param("minAmount") Long minAmount,
             @Param("maxAmount") Long maxAmount
+    );
+
+    // 실거래가 검색용
+    Page<Transaction> findBySggCdAndDealDateBetween(
+            String sggCd,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable
     );
 }

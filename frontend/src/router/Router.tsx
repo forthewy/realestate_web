@@ -9,7 +9,7 @@ import ProtectedRoute from "../auth/components/ProtectedRoute";
 import LogIn from "../auth/pages/LogIn";
 import Register from "../auth/pages/Register";
 import Layout from "../components/common/Layout";
-import TransactionMap from "../dashboard/pages/TransactionMap";
+import TransactionMap from "../map/pages/TransactionMap";
 import MyPage from "../mypage/pages/MyPage";
 import TransactionsPage from "../transaction/pages/TransactionsPage";
 
