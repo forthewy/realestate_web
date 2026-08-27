@@ -1,14 +1,12 @@
 package com.jane.realestate.service;
 
 
+import com.jane.realestate.dto.TransactionImportResponse;
+import com.jane.realestate.dto.TransactionImportStatusResponse;
 import com.jane.realestate.dto.UserResponse;
-import com.jane.realestate.entity.Apartment;
-import com.jane.realestate.entity.Region;
-import com.jane.realestate.entity.Transaction;
-import com.jane.realestate.repository.ApartmentRepository;
-import com.jane.realestate.repository.RegionRepository;
-import com.jane.realestate.repository.TransactionRepository;
-import com.jane.realestate.repository.UserRepository;
+import com.jane.realestate.entity.*;
+import com.jane.realestate.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -20,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,9 @@ public class AdminService {
     private final TransactionRepository transactionRepository;
     private final ApartmentRepository apartmentRepository;
     private final KakaoGeocodingService kakaoGeocodingService;
+    private final TransactionImportRepository transactionImportRepository;
+    private final TransactionStoredMonthRepository transactionStoredMonthRepository;
+
 
     public List<UserResponse> getUsers() {
 
@@ -81,6 +83,20 @@ public class AdminService {
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
 
             Sheet sheet = workbook.getSheetAt(0);
+            String searchPeriod =
+                    formatter.formatCellValue(
+                            sheet.getRow(8).getCell(0)
+                    ).trim();
+
+            String period = searchPeriod
+                    .replace("계약일자", "")
+                    .replace(":", "")
+                    .trim();
+
+            String[] dates = period.split("~");
+
+            LocalDate startDate = LocalDate.parse(dates[0].trim());
+            LocalDate endDate = LocalDate.parse(dates[1].trim());
 
 //            for (int i = 14; i <= sheet.getLastRowNum(); i++) {
             for (int i = 14; i <= 24; i++) {
@@ -259,6 +275,17 @@ public class AdminService {
                     transactions
             );
 
+            // 임포트 내역 저장
+            TransactionImport transactionImport =
+                    TransactionImport.builder()
+                            .startDate(startDate)
+                            .endDate(endDate)
+                            .transactionCount(transactions.size())
+                            .skippedCount(skippedCount)
+                            .build();
+
+            transactionImportRepository.save(transactionImport);
+
             System.out.println(
                     "신규 아파트 저장: "
                             + newApartments.size()
@@ -283,5 +310,130 @@ public class AdminService {
                     e
             );
         }
+    }
+
+    public List<TransactionImportResponse> getImports(String yearMonth) {
+
+        YearMonth month = YearMonth.parse(yearMonth);
+
+        LocalDate monthStart = month.atDay(1);
+        LocalDate monthEnd = month.atEndOfMonth();
+
+        return transactionImportRepository
+                .findImportedMonth(monthStart, monthEnd)
+                .stream()
+                .map(transactionImport ->
+                        new TransactionImportResponse(
+                                transactionImport.getId(),
+                                transactionImport.getStartDate(),
+                                transactionImport.getEndDate(),
+                                transactionImport.getTransactionCount(),
+                                transactionImport.getSkippedCount(),
+                                transactionImport.getImportedAt()
+                        )
+                )
+                .toList();
+    }
+
+    public TransactionImportStatusResponse getImportStatus(String yearMonth) {
+
+        YearMonth month = YearMonth.parse(yearMonth);
+
+        LocalDate monthStart = month.atDay(1);
+        LocalDate monthEnd = month.atEndOfMonth();
+
+        List<TransactionImport> imports =
+                transactionImportRepository
+                        .findImportedMonth(
+                                monthStart,
+                                monthEnd
+                        );
+
+        boolean approvable =
+                isImportApprovable(month, imports);
+
+        boolean approved =
+                transactionStoredMonthRepository
+                        .existsByYearMonth(yearMonth);
+
+        return new TransactionImportStatusResponse(
+                yearMonth,
+                approvable,
+                approved
+        );
+    }
+
+    private boolean isImportApprovable(
+            YearMonth month,
+            List<TransactionImport> imports
+    ) {
+        if (imports.isEmpty()) {
+            return false;
+        }
+
+        LocalDate monthStart = month.atDay(1);
+        LocalDate monthEnd = month.atEndOfMonth();
+
+        LocalDate coveredUntil = monthStart.minusDays(1);
+
+        for (TransactionImport transactionImport : imports) {
+
+            LocalDate startDate = transactionImport.getStartDate();
+            LocalDate endDate = transactionImport.getEndDate();
+
+            // 아직 채워진 날짜 다음보다 뒤에서 시작하면 중간에 빈 날짜가 있음
+            if (startDate.isAfter(coveredUntil.plusDays(1))) {
+                return false;
+            }
+
+            // 기존 범위보다 더 뒤까지 채우는 Import라면 범위 확장
+            if (endDate.isAfter(coveredUntil)) {
+                coveredUntil = endDate;
+            }
+
+            // 해당 월 마지막 날까지 도달
+            if (!coveredUntil.isBefore(monthEnd)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Transactional
+    public void approveStoredMonth(String yearMonth) {
+
+        YearMonth month = YearMonth.parse(yearMonth);
+
+        LocalDate monthStart = month.atDay(1);
+        LocalDate monthEnd = month.atEndOfMonth();
+
+        List<TransactionImport> imports =
+                transactionImportRepository.findImportedMonth(
+                        monthStart,
+                        monthEnd
+                );
+
+        if (!isImportApprovable(month, imports)) {
+            throw new IllegalStateException(
+                    "해당 월의 데이터가 모두 등록되지 않았습니다."
+            );
+        }
+
+        if (transactionStoredMonthRepository.existsByYearMonth(yearMonth)) {
+            return;
+        }
+
+        TransactionStoredMonth storedMonth =
+                TransactionStoredMonth.builder()
+                        .yearMonth(yearMonth)
+                        .build();
+
+        transactionStoredMonthRepository.save(storedMonth);
+    }
+
+    @Transactional
+    public void cancelStoredMonth(String yearMonth) {
+        transactionStoredMonthRepository.deleteByYearMonth(yearMonth);
     }
 }

@@ -2,6 +2,7 @@ import type { LoginRequest, RegisterRequest } from "../auth/types/auth";
 import type { ApartmentMapItem } from "../dashboard/components/KakaoMap";
 import type { PageResponse, Transaction } from "../transaction/types/transaction";
 
+// 경로 연결
 export async function apiFetch(
     url: string,
     options: RequestInit = {}
@@ -82,6 +83,7 @@ export function buildQuery(params: Record<string, string | number | undefined | 
     return query ? `?${query}` : "";
 }
 
+// 로그인
 export function login(body: LoginRequest) {
     return apiFetch("/api/auth/login", {
         method: "POST",
@@ -89,6 +91,7 @@ export function login(body: LoginRequest) {
     });
 }
 
+// ------ 회원가입 ------------
 export function register(body: RegisterRequest) {
     return apiFetch("/api/auth/register", {
         method: "POST",
@@ -96,14 +99,18 @@ export function register(body: RegisterRequest) {
     });
 }
 
+// 아이디 중복
 export function checkUsername(username: string) {
     return apiFetch(`/api/auth/check-username${buildQuery({ username })}`);
 }
 
+// 전화번호 중복
 export function checkPhone(phone: string) {
     return apiFetch(`/api/auth/check-phone${buildQuery({ phone })}`);
 }
 
+// ---------- 마이 페이지 ----------
+// 마이페이지 유저 정보
 export type UserResponse = {
     id: number;
     username: string;
@@ -112,15 +119,18 @@ export type UserResponse = {
     role: string;
 };
 
+// 마이페이지
 export function getMyPage() {
     return apiJson<UserResponse>("/api/users/me");
 }
 
+// 회원정보 수정 타입
 export type UpdateUserRequest = {
     phone: string;
     password: string;
 };
 
+// 회원정보 수정
 export function updateMyPage(body: UpdateUserRequest) {
     return apiFetch("/api/users/me", {
         method: "PATCH",
@@ -157,7 +167,8 @@ export function getMapTransactions(
 export function getAdminUsers() {
     return apiFetch("/api/admin/users");
 }
-
+// --------- Excel Import --------------
+// Excel 업로드
 export function importExcel(formData: FormData) {
     return apiFetch("/api/admin/import", {
         method: "POST",
@@ -165,4 +176,49 @@ export function importExcel(formData: FormData) {
     });
 }
 
+// Import 이력
+export type TransactionImport = {
+    id: number;
+    startDate: string;
+    endDate: string;
+    transactionCount: number;
+    skippedCount: number;
+    importedAt: string;
+};
 
+export function getTransactionImports(yearMonth: string) {
+    return apiJson<TransactionImport[]>(
+        `/api/admin/import${buildQuery({ yearMonth })}`
+    );
+}
+
+// 월 승인 상태
+export type TransactionImportStatus = {
+    yearMonth: string;
+    approvable: boolean;
+    approved: boolean;
+};
+// DB 조회 승인
+export function approveStoredMonth(yearMonth: string) {
+    return apiFetch(
+        `/api/admin/import/approve${buildQuery({ yearMonth })}`,
+        {
+            method: "POST",
+        }
+    );
+}
+
+// DB 조회 승인취소
+export function cancelStoredMonth(yearMonth: string) {
+    return apiFetch(
+        `/api/admin/import/approve${buildQuery({ yearMonth })}`,
+        {
+            method: "DELETE",
+        }
+    );
+}
+export function getTransactionImportStatus(yearMonth: string) {
+    return apiJson<TransactionImportStatus>(
+        `/api/admin/import/status${buildQuery({ yearMonth })}`
+    );
+}

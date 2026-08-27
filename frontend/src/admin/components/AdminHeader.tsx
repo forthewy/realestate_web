@@ -27,7 +27,7 @@ export default function AdminHeader() {
                 <Link
                     to="/"
                     className={linkStyle}>
-                    대시보드
+                    관리자 홈
                 </Link>
                 <Link
                      to="/admin/users"

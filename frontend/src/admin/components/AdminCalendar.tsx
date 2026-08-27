@@ -1,10 +1,21 @@
-import { useState } from "react";
+import type { TransactionImport } from "../../services/api";
 
-export default function AdminCalendar() {
-    const [currentDate, setCurrentDate] = useState(new Date());
+type AdminCalendarProps = {
+    selectedMonth: string;
+    onMonthChange: (month: string) => void;
+    imports: TransactionImport[];
+};
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1;
+export default function AdminCalendar({
+    selectedMonth,
+    onMonthChange,
+    imports,
+}: AdminCalendarProps) {
+
+    const [year, month] = selectedMonth
+        .split("-")
+        .map(Number);
+
     const days = ["일", "월", "화", "수", "목", "금", "토"];
     const today = new Date();
 
@@ -14,13 +25,15 @@ export default function AdminCalendar() {
     // 달의 마지막 날짜
     const lastDate = new Date(year, month, 0).getDate();
 
-    // 달력에 표시할 날짜.요일
+    // 달력에 표시할 날짜
     const calendarDays = [
         ...Array(firstDay).fill(null),
-        ...Array.from({ length: lastDate }, (_, index) => index + 1),
+        ...Array.from(
+            { length: lastDate },
+            (_, index) => index + 1
+        ),
     ];
 
-    // 오늘 날짜 확인
     const isToday = (date: number | null) => {
         return (
             date === today.getDate() &&
@@ -28,16 +41,46 @@ export default function AdminCalendar() {
             year === today.getFullYear()
         );
     };
+    const isImported = (date: number | null) => {
+        if (date === null) {
+            return false;
+        }
+
+        const currentDate =
+            `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+
+        return imports.some(
+            (item) =>
+                currentDate >= item.startDate &&
+                currentDate <= item.endDate
+        );
+    };
+
+    const changeMonth = (offset: number) => {
+        const date = new Date(
+            year,
+            month - 1 + offset,
+            1
+        );
+
+        const newMonth =
+            `${date.getFullYear()}-${String(
+                date.getMonth() + 1
+            ).padStart(2, "0")}`;
+
+        onMonthChange(newMonth);
+    };
 
     const handlePrevMonth = () => {
-        setCurrentDate(new Date(year, month - 2, 1));
+        changeMonth(-1);
     };
+
     const handleNextMonth = () => {
-        setCurrentDate(new Date(year, month, 1));
+        changeMonth(1);
     };
 
     return (
-        <div>
+        <div className="mt-8">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">
                     {year}년 {month}월
@@ -72,21 +115,39 @@ export default function AdminCalendar() {
                     </div>
                 ))}
             </div>
+
             <div className="grid grid-cols-7">
                 {calendarDays.map((date, index) => (
                     <div
                         key={index}
-                        className={`min-h-24 border border-gray p-2 ${isToday(date) ? "bg-primary/10" : ""
+                        className={`min-h-24 border border-gray p-2 ${isToday(date)
+                            ? "bg-primary/10"
+                            : ""
                             }`}
                     >
                         <div className="flex">
                             {date}
+
                             {isToday(date) && (
-                                <div className="mt-2 text-sm font-medium text-primary">
+                                <div className="ml-2 text-sm font-medium text-primary">
                                     오늘
                                 </div>
                             )}
                         </div>
+
+                        {date && (
+                            <div className="mt-2">
+                                {isImported(date) ? (
+                                    <span className="text-sm font-medium">
+                                        등록
+                                    </span>
+                                ) : (
+                                    <span className="text-sm text-text-secondary">
+                                        미등록
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

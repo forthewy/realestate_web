@@ -32,11 +32,6 @@ const linkStyle = ({ isActive }: { isActive: boolean }) =>
                 >
                     데이터 Import
                 </NavLink>
-                <NavLink
-                    to="/admin/settings"
-                    className={linkStyle}>
-                    시스템 설정
-                </NavLink>
             </nav>
         </aside>
     );

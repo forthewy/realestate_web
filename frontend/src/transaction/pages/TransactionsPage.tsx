@@ -14,7 +14,7 @@ const getCurrentYearMonth = () => {
   ).padStart(2, "0")}`;
 };
 
-export default function Transaction() {
+export default function TransactionsPage() {
   // 실거래건
   const [transactions, setTransactions] =
     useState<PageResponse<Transaction>>({

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -7,8 +6,6 @@ export default function Header() {
     const navigate = useNavigate();
     // 로그인
     const { isLogin, logout, role } = useAuth();
-    // 검색
-    const [searchWord, setSearchWord] = useState("");
 
     // 로그 아웃
     const handleLogout = () => {
@@ -29,9 +26,9 @@ export default function Header() {
                     <Link
                         to="/"
                         className={linkStyle}>
-                        대시보드
+                        지도
                     </Link>
-                    <Link to="/transaction" className={linkStyle}>
+                    <Link to="/transactions" className={linkStyle}>
                         실거래
                     </Link>
                     <Link to="/mypage" className={linkStyle}>
@@ -49,23 +46,6 @@ export default function Header() {
                     ) : (
                         <Link to="/login" className={linkStyle}>로그인</Link>
                     )}
-                {/* 검색 */}
-                <div className="flex items-center gap-2 px-6">
-                    <input
-                        type="search"
-                        value={searchWord}
-                        onChange={(e) => setSearchWord(e.target.value)}
-                       // onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                        placeholder="지역을 검색하세요"
-                        className="w-48 rounded-lg text-base border border-gray px-4 py-2 outline-none focus:ring-1 focus:ring-primary"
-                    />
-                    <button
-                       // onClick={handleSearch}
-                        className="rounded-lg bg-primary px-4 py-2 font-medium text-white"
-                    >
-                        검색
-                    </button>
-                </div>
             </nav>
         </header>
     );

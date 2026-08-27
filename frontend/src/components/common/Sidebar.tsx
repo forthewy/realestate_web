@@ -10,7 +10,7 @@ export default function Sidebar() {
         <Link
           to="/"
           className={linkStyle}
-        >대시보드
+        >지도
         </Link>
         <Link
           to="/transaction"

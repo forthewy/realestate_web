@@ -1,9 +1,77 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+    approveStoredMonth,
+    cancelStoredMonth,
+    getTransactionImports,
+    getTransactionImportStatus,
+    importExcel,
+    type TransactionImport,
+} from "../../services/api";
 import AdminCalendar from "../components/AdminCalendar";
-import { importExcel } from "../../services/api";
 
 export default function AdminImport() {
     const [file, setFile] = useState<File | null>(null);
+    const [imports, setImports] = useState<TransactionImport[]>([]);
+    // 현재 선택된 월
+    const [selectedMonth, setSelectedMonth] = useState(() => {
+        const now = new Date();
+
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    });
+
+    const [approvable, setApprovable] = useState(false);
+    const [approved, setApproved] = useState(false);
+    const handleApprove = async () => {
+        const response = await approveStoredMonth(selectedMonth);
+
+        if (!response.ok) {
+            alert("승인에 실패했습니다.");
+            return;
+        }
+
+        setApproved(true);
+    };
+    const handleCancel = async () => {
+        const response = await cancelStoredMonth(selectedMonth);
+
+        if (!response.ok) {
+            alert("승인 취소에 실패했습니다.");
+            return;
+        }
+
+        setApproved(false);
+    };
+
+    useEffect(() => {
+        const loadImports = async () => {
+            try {
+                const data = await getTransactionImports(selectedMonth);
+                setImports(data);
+            } catch (error) {
+                console.error("Import 이력 조회 실패:", error);
+                setImports([]);
+            }
+        };
+
+        loadImports();
+    }, [selectedMonth]);
+
+    useEffect(() => {
+        const loadStatus = async () => {
+            try {
+                const status =
+                    await getTransactionImportStatus(selectedMonth);
+
+                setApprovable(status.approvable);
+                setApproved(status.approved);
+            } catch (error) {
+                console.error("Import 상태 조회 실패:", error);
+            }
+        };
+
+        loadStatus();
+    }, [selectedMonth]);
+
     const uploadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -21,11 +89,13 @@ export default function AdminImport() {
 
         alert("업로드가 완료되었습니다.");
         setFile(null);
+        window.location.reload();
     };
+
     return (
         <div className="p-8">
             {/* 페이지 상단 */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">
                         데이터 관리
@@ -35,13 +105,18 @@ export default function AdminImport() {
                         실거래 데이터의 등록 현황을 관리합니다.
                     </p>
                 </div>
-                <form onSubmit={uploadSubmit}>
+
+                <form
+                    onSubmit={uploadSubmit}
+                    className="flex items-center gap-3"
+                >
                     <label
                         htmlFor="excelFile"
                         className="cursor-pointer rounded-lg bg-primary px-5 py-3 font-semibold text-white"
                     >
-                        Excel 업로드
+                        Excel 선택
                     </label>
+
                     <input
                         id="excelFile"
                         type="file"
@@ -55,46 +130,91 @@ export default function AdminImport() {
                             }
                         }}
                     />
+
                     {file && (
-                        <p>
-                            선택한 파일: {file.name}
-                        </p>
+                        <span className="text-sm text-text-secondary">
+                            {file.name}
+                        </span>
                     )}
-                    <button type="submit" className="bg-secondary">
+
+                    <button
+                        type="submit"
+                        disabled={!file}
+                        className="rounded-lg bg-secondary px-5 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+                    >
                         업로드
                     </button>
                 </form>
             </div>
 
-            {/* 데이터 현황 */}
+            {/* 선택 월 데이터 상태 */}
             <div className="mt-8 rounded-xl border border-gray p-6">
-                <p className="text-sm text-text-secondary">
-                    데이터 현황
-                </p>
-
-                <div className="mt-3 flex gap-12">
+                <div className="flex items-center justify-between">
                     <div>
                         <p className="text-sm text-text-secondary">
-                            최근 데이터
+                            DB 조회 상태
                         </p>
+
                         <p className="mt-1 text-xl font-semibold">
-                            2026.08.10
+                            {selectedMonth}
                         </p>
                     </div>
 
                     <div>
-                        <p className="text-sm text-text-secondary">
-                            총 데이터
-                        </p>
-                        <p className="mt-1 text-xl font-semibold">
-                            128,420건
-                        </p>
+                        {approved ? (
+                            <button
+                                type="button"
+                                onClick={handleCancel}
+                                className="rounded-lg border border-gray px-5 py-2"
+                            >
+                                승인 취소
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                disabled={!approvable}
+                                onClick={handleApprove}
+                                className="rounded-lg bg-primary px-5 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                DB 조회 승인
+                            </button>
+                        )}
                     </div>
+                </div>
+
+                <div className="mt-5 border-t border-gray pt-5">
+                    {approved ? (
+                        <p className="font-semibold">
+                            DB 조회 사용 중
+                        </p>
+                    ) : approvable ? (
+                        <>
+                            <p className="font-semibold">
+                                승인 가능
+                            </p>
+                            <p className="mt-1 text-sm text-text-secondary">
+                                해당 월의 데이터가 모두 등록되어 있습니다.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <p className="font-semibold">
+                                승인 불가
+                            </p>
+                            <p className="mt-1 text-sm text-text-secondary">
+                                해당 월의 데이터가 모두 등록되지 않았습니다.
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
 
             {/* 달력 */}
-            <AdminCalendar />
+            <AdminCalendar
+                selectedMonth={selectedMonth}
+                onMonthChange={setSelectedMonth}
+                imports={imports}
+            />
         </div>
     );
 }

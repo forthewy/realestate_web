@@ -3,6 +3,7 @@ package com.jane.realestate.controller;
 import com.jane.realestate.dto.ApartmentMapResponse;
 import com.jane.realestate.dto.TransactionResponse;
 import com.jane.realestate.dto.api.TransactionApiItem;
+import com.jane.realestate.service.TransactionApiService;
 import com.jane.realestate.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +23,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionController {
 
+    // DB 용
     private final TransactionService transactionService;
+
+    // API 호출용
+    private final TransactionApiService transactionApiService;
 
 
     @GetMapping
@@ -48,7 +53,7 @@ public class TransactionController {
             @RequestParam(defaultValue = "1") String pageNo
     ) {
         return ResponseEntity.ok(
-                transactionService.getTransactionsFromApi(
+                transactionApiService.getTransactions(
                         sggCd,
                         dealYmd,
                         pageNo
