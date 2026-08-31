@@ -25,11 +25,6 @@ export default function AdminHeader() {
             </div>
             <nav className="flex shrink-0 gap-8 mx-auto ml-8 text-2xl font-medium">
                 <Link
-                    to="/"
-                    className={linkStyle}>
-                    관리자 홈
-                </Link>
-                <Link
                      to="/admin/users"
                     className={linkStyle}>
                     회원관리

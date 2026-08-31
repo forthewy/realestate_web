@@ -64,7 +64,7 @@ public class AdminService {
 
         DataFormatter formatter = new DataFormatter();
 
-        // 지역코드는 import 시 반드시 필요하므로 메모리에 한 번 로드
+        // 지역코드 메모리에 한 번 로드
         Map<String, String> regionMap = regionRepository.findAll()
                 .stream()
                 .collect(Collectors.toMap(
@@ -72,7 +72,23 @@ public class AdminService {
                         Region::getCode
                 ));
 
+        // 기존 아파트 메모리에 한 번 로드
+        Map<String, Apartment> apartmentMap =
+                apartmentRepository.findAll()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                apartment ->
+                                        createApartmentKey(
+                                                apartment.getSggCd(),
+                                                apartment.getUmdNm(),
+                                                apartment.getJibun()
+                                        ),
+                                apartment -> apartment,
+                                (existing, duplicate) -> existing
+                        ));
+
         List<Transaction> transactions = new ArrayList<>();
+        List<Apartment> newApartments = new ArrayList<>();
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
 
@@ -94,11 +110,15 @@ public class AdminService {
 
             String[] dates = period.split("~");
 
-            LocalDate startDate = LocalDate.parse(dates[0].trim());
-            LocalDate endDate = LocalDate.parse(dates[1].trim());
+            LocalDate startDate =
+                    LocalDate.parse(dates[0].trim());
+
+            LocalDate endDate =
+                    LocalDate.parse(dates[1].trim());
 
             // 14번째 행부터 실제 데이터
-            for (int i = 14; i <= sheet.getLastRowNum(); i++) {
+//            for (int i = 14; i <= sheet.getLastRowNum(); i++) {
+            for (int i = 14; i <= 200; i++) {
 
                 Row row = sheet.getRow(i);
 
@@ -108,39 +128,83 @@ public class AdminService {
 
                 // 예: 서울특별시 동대문구 전농동
                 String address =
-                        formatter.formatCellValue(row.getCell(1)).trim();
+                        formatter.formatCellValue(
+                                row.getCell(1)
+                        ).trim();
 
-                int lastSpace = address.lastIndexOf(" ");
+                String[] addressParts = address.split(" ");
 
-                if (lastSpace == -1) {
+                String umdNm = addressParts[addressParts.length - 1];
+
+                String regionName = address;
+
+                while (!regionMap.containsKey(regionName)) {
+
+                    int lastSpace = regionName.lastIndexOf(" ");
+
+                    if (lastSpace == -1) {
+                        break;
+                    }
+
+                    regionName = regionName.substring(0, lastSpace);
+                }
+
+                String sggCd = regionMap.get(regionName);
+
+                if (sggCd == null) {
+                    log.warn("지역코드 조회 실패 - {}", address);
                     skippedCount++;
                     continue;
                 }
 
-                String regionName =
-                        address.substring(0, lastSpace);
-
-                String umdNm =
-                        address.substring(lastSpace + 1);
-
-                String sggCd =
-                        regionMap.get(regionName);
-
                 // 지원하지 않는 지역코드
                 if (sggCd == null) {
+                    log.warn(
+                            "지원하지 않는 지역 - regionName: {}, address: {}",
+                            regionName,
+                            address
+                    );
                     skippedCount++;
                     continue;
                 }
 
                 String jibun =
-                        formatter.formatCellValue(row.getCell(2)).trim();
+                        formatter.formatCellValue(
+                                row.getCell(2)
+                        ).trim();
 
                 String aptName =
-                        formatter.formatCellValue(row.getCell(5)).trim();
+                        formatter.formatCellValue(
+                                row.getCell(5)
+                        ).trim();
+
+                /*
+                 * 아파트 저장
+                 *
+                 * address:
+                 * 서울특별시 동대문구 전농동
+                 *
+                 * fullAddress:
+                 * 서울특별시 동대문구 전농동 10
+                 */
+                String fullAddress =
+                        address + " " + jibun;
+
+                findOrCreateApartment(
+                        apartmentMap,
+                        newApartments,
+                        aptName,
+                        sggCd,
+                        umdNm,
+                        jibun,
+                        fullAddress
+                );
 
                 // 거래 년월
                 String yearMonth =
-                        formatter.formatCellValue(row.getCell(7)).trim();
+                        formatter.formatCellValue(
+                                row.getCell(7)
+                        ).trim();
 
                 int day =
                         Integer.parseInt(
@@ -226,6 +290,31 @@ public class AdminService {
             // 거래 일괄 저장
             transactionRepository.saveAll(transactions);
 
+            // 신규 아파트 좌표 조회
+            for (Apartment apartment : newApartments) {
+
+                KakaoGeocodingService.Coordinate coordinate =
+                        kakaoGeocodingService.getCoordinate(
+                                apartment.getAddress()
+                        );
+
+                if (coordinate == null) {
+                    log.warn(
+                            "아파트 좌표 조회 실패 - {}",
+                            apartment.getAddress()
+                    );
+                    continue;
+                }
+
+                apartment.updateCoordinate(
+                        coordinate.latitude(),
+                        coordinate.longitude()
+                );
+            }
+
+            // 신규 아파트 일괄 저장
+            apartmentRepository.saveAll(newApartments);
+
             // Import 이력 저장
             TransactionImport transactionImport =
                     TransactionImport.builder()
@@ -244,6 +333,7 @@ public class AdminService {
             );
 
         } finally {
+
             long elapsedNanos =
                     System.nanoTime() - startTime;
 
@@ -256,16 +346,100 @@ public class AdminService {
                     - file: {}
                     - rows: {}
                     - inserted transactions: {}
+                    - inserted apartments: {}
                     - skipped: {}
                     - elapsed: {} sec
                     """,
                     file.getOriginalFilename(),
                     totalRows,
                     transactions.size(),
+                    newApartments.size(),
                     skippedCount,
                     String.format("%.2f", elapsedSeconds)
             );
         }
+    }
+
+
+    // 아파트 조회 / 신규 생성
+    private Apartment findOrCreateApartment(
+            Map<String, Apartment> apartmentMap,
+            List<Apartment> newApartments,
+            String aptName,
+            String sggCd,
+            String umdNm,
+            String jibun,
+            String fullAddress
+    ) {
+
+        String apartmentKey =
+                createApartmentKey(
+                        sggCd,
+                        umdNm,
+                        jibun
+                );
+
+        Apartment apartment =
+                apartmentMap.get(apartmentKey);
+
+        // 이미 존재하는 아파트
+        if (apartment != null) {
+            return apartment;
+        }
+
+        // 신규 아파트
+        apartment =
+                createApartment(
+                        aptName,
+                        sggCd,
+                        umdNm,
+                        jibun,
+                        fullAddress
+                );
+
+        // 같은 Excel 안에서 다시 생성되는 것 방지
+        apartmentMap.put(
+                apartmentKey,
+                apartment
+        );
+
+        newApartments.add(apartment);
+
+        return apartment;
+    }
+
+
+    // 아파트 생성
+    private Apartment createApartment(
+            String aptName,
+            String sggCd,
+            String umdNm,
+            String jibun,
+            String fullAddress
+    ) {
+
+        return Apartment.builder()
+                .aptName(aptName)
+                .sggCd(sggCd)
+                .umdNm(umdNm)
+                .jibun(jibun)
+                .address(fullAddress)
+                .build();
+    }
+
+
+    // 아파트 중복 판별 Key
+    private String createApartmentKey(
+            String sggCd,
+            String umdNm,
+            String jibun
+    ) {
+
+        return sggCd
+                + "|"
+                + umdNm
+                + "|"
+                + jibun;
     }
 
     public List<TransactionImportResponse> getImports(String yearMonth) {
@@ -393,40 +567,4 @@ public class AdminService {
         transactionStoredMonthRepository.deleteByYearMonth(yearMonth);
     }
 
-//    private Apartment findOrCreateApartment(
-//            Map<String, Apartment> apartmentMap,
-//            List<Apartment> newApartments,
-//            String aptName,
-//            String sggCd,
-//            String umdNm,
-//            String jibun,
-//            String fullAddress
-//    ) {
-//        String apartmentKey =
-//                sggCd
-//                        + "|"
-//                        + umdNm
-//                        + "|"
-//                        + jibun;
-//
-//        Apartment apartment =
-//                apartmentMap.get(apartmentKey);
-//
-//        if (apartment != null) {
-//            return apartment;
-//        }
-//
-//        apartment = createApartment(
-//                aptName,
-//                sggCd,
-//                umdNm,
-//                jibun,
-//                fullAddress
-//        );
-//
-//        apartmentMap.put(apartmentKey, apartment);
-//        newApartments.add(apartment);
-//
-//        return apartment;
-//    }
 }

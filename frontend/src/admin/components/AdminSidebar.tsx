@@ -14,13 +14,6 @@ const linkStyle = ({ isActive }: { isActive: boolean }) =>
             </h2>
             <nav className="text-xl flex flex-col">
                 <NavLink
-                    to="/admin"
-                    end
-                    className={linkStyle}
-                >
-                    관리자 홈
-                </NavLink>
-                <NavLink
                     to="/admin/users"
                     className={linkStyle}
                 >

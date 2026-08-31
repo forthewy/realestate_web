@@ -22,7 +22,7 @@ export async function apiFetch(
         },
     });
 
-    // 인증 API 자체는 Refresh 대상에서 제외
+    // 로그인,회원가입 api는 Refresh 대상에서 제외
     if (response.status !== 401 || isAuthApi) {
         return response;
     }
