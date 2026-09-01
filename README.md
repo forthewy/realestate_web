@@ -5,6 +5,13 @@
 
 Spring Boot 기반 REST API와 React로 구현했으며, 
 저장된 데이터와 외부 API를 함께 활용할 수 있도록 구성했습니다.
+<p align="center">
+<img width="32%"  alt="image" src="https://github.com/user-attachments/assets/447c8a8e-31fb-4d5e-a069-f5d3f584c568" />
+<img width="32%"  alt="image" src="https://github.com/user-attachments/assets/2cae8df4-747e-46b4-a2e8-5b2c9a406927" />
+<img width="32%"   alt="image" src="https://github.com/user-attachments/assets/7a1f5756-a67b-4aba-bea4-46b10d748639" />
+
+</p>
+
 
 ## 주요 기능
 
