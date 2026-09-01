@@ -3,11 +3,13 @@ package com.jane.realestate.service;
 import com.jane.realestate.entity.Apartment;
 import com.jane.realestate.repository.ApartmentRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApartmentGeocodingService {
@@ -15,35 +17,21 @@ public class ApartmentGeocodingService {
     private final ApartmentRepository apartmentRepository;
     private final KakaoGeocodingService kakaoGeocodingService;
 
+    // 아파트 위도 경도 채우기
     @Transactional
-    public void updateCoordinates() {
+    public int geocodeApartments() {
 
         List<Apartment> apartments =
-                apartmentRepository.findAll();
-
-        int successCount = 0;
-        int failCount = 0;
+                apartmentRepository.findTop100ByLatitudeIsNull();
 
         for (Apartment apartment : apartments) {
-
-            // 이미 좌표가 있으면 다시 호출하지 않음
-            if (apartment.getLatitude() != null
-                    && apartment.getLongitude() != null) {
-                continue;
-            }
-
+            // 카카오 api 조회
             KakaoGeocodingService.Coordinate coordinate =
                     kakaoGeocodingService.getCoordinate(
                             apartment.getAddress()
                     );
 
             if (coordinate == null) {
-                System.out.println(
-                        "좌표 변환 실패: "
-                                + apartment.getAddress()
-                );
-
-                failCount++;
                 continue;
             }
 
@@ -51,16 +39,14 @@ public class ApartmentGeocodingService {
                     coordinate.latitude(),
                     coordinate.longitude()
             );
-
-            successCount++;
         }
 
-        System.out.println(
-                "좌표 저장 성공: " + successCount + "건"
-        );
+        return apartments.size();
+    }
 
-        System.out.println(
-                "좌표 변환 실패: " + failCount + "건"
-        );
+    // 위도 경도 없는 아파트 갯수 조회
+    public long getMissingCoordinateCount() {
+        return apartmentRepository
+                .countByLatitudeIsNull();
     }
 }

@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -54,5 +55,20 @@ public class UserService {
                     passwordEncoder.encode(request.password())
             );
         }
+    }
+
+    // 전체 회원 조회
+    public List<UserResponse> getUsers() {
+
+        return userRepository.findAll()
+                .stream()
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getName(),
+                        user.getPhone(),
+                        user.getRole()
+                ))
+                .toList();
     }
 }

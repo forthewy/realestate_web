@@ -5,6 +5,7 @@ import com.jane.realestate.dto.TransactionImportStatusResponse;
 import com.jane.realestate.dto.UserResponse;
 import com.jane.realestate.service.AdminService;
 import com.jane.realestate.service.ApartmentGeocodingService;
+import com.jane.realestate.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +20,12 @@ public class AdminController {
 
     private final AdminService adminService;
     private final ApartmentGeocodingService apartmentGeocodingService;
+    private final UserService userService;
 
     @GetMapping("/users")
     public ResponseEntity<List<UserResponse>> getUsers() {
 
-        return ResponseEntity.ok(adminService.getUsers());
+        return ResponseEntity.ok(userService.getUsers());
     }
 
     // ------- Excel Import -------------
@@ -67,15 +69,12 @@ public class AdminController {
         adminService.cancelStoredMonth(yearMonth);
     }
 
-//    @PostMapping("/apartments/geocode")
-//    public void geocodeApartments() {
-//        apartmentGeocodingService.updateCoordinates();
-//    }
-
+    //------ 위도 경도 ------
+    // 위도 경도 조회
     @PostMapping("/apartments/geocode")
     public ResponseEntity<Void> geocodeApartments() {
 
-        adminService.geocodeApartments();
+        apartmentGeocodingService.geocodeApartments();
 
         return ResponseEntity.noContent().build();
     }
@@ -83,6 +82,6 @@ public class AdminController {
     // 위도 경도 미입력된 아파트 조회
     @GetMapping("/apartments/geocode/status")
     public long getGeocodeStatus() {
-        return adminService.getMissingCoordinateCount();
+        return apartmentGeocodingService.getMissingCoordinateCount();
     }
 }

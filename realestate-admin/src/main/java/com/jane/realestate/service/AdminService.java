@@ -31,30 +31,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AdminService {
 
-    private final UserRepository userRepository;
     private final RegionRepository regionRepository;
     private final TransactionRepository transactionRepository;
     private final ApartmentRepository apartmentRepository;
-    private final KakaoGeocodingService kakaoGeocodingService;
     private final TransactionImportRepository transactionImportRepository;
     private final TransactionStoredMonthRepository transactionStoredMonthRepository;
 
 
-    public List<UserResponse> getUsers() {
-
-        return (List<UserResponse>) userRepository.findAll()
-                .stream()
-                .map(user -> new UserResponse(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getName(),
-                        user.getPhone(),
-                        user.getRole()
-                ))
-                .toList();
-    }
-
-
+    // ---------- 실거래 데이터 Import ----------
     // 엑셀 업로드
     public void importExcel(MultipartFile file) {
         long startTime = System.nanoTime();
@@ -167,11 +151,6 @@ public class AdminService {
 
                 String sggCd = regionMap.get(regionName);
 
-                if (sggCd == null) {
-                    log.warn("지역코드 조회 실패 - {}", address);
-                    skippedCount++;
-                    continue;
-                }
 
                 // 지원하지 않는 지역코드
                 if (sggCd == null) {
@@ -403,7 +382,7 @@ public class AdminService {
     }
 
 
-    // 아파트 생성
+    // 신규 아파트 생성
     private Apartment createApartment(
             String aptName,
             String sggCd,
@@ -436,6 +415,8 @@ public class AdminService {
                 + jibun;
     }
 
+    // ---------- Import 이력 관리 ----------
+    // 월별 Import 이력 조회
     public List<TransactionImportResponse> getImports(String yearMonth) {
 
         YearMonth month = YearMonth.parse(yearMonth);
@@ -459,6 +440,7 @@ public class AdminService {
                 .toList();
     }
 
+    // 해당 월의 데이터 등록 및 승인 상태 조회
     public TransactionImportStatusResponse getImportStatus(String yearMonth) {
 
         YearMonth month = YearMonth.parse(yearMonth);
@@ -486,7 +468,7 @@ public class AdminService {
                 approved
         );
     }
-
+    // 해당 월 전체 기간의 데이터가 등록되었는지 확인
     private boolean isImportApprovable(
             YearMonth month,
             List<TransactionImport> imports
@@ -524,6 +506,8 @@ public class AdminService {
         return false;
     }
 
+    // ---------- DB 승인 관리 ----------
+    // 해당 월의 실거래 데이터를 조회 가능 상태로 승인
     @Transactional
     public void approveStoredMonth(String yearMonth) {
 
@@ -555,39 +539,9 @@ public class AdminService {
 
         transactionStoredMonthRepository.save(storedMonth);
     }
-
+    // 해당 월의 승인 취소
     @Transactional
     public void cancelStoredMonth(String yearMonth) {
         transactionStoredMonthRepository.deleteByYearMonth(yearMonth);
-    }
-
-    @Transactional
-    public int geocodeApartments() {
-
-        List<Apartment> apartments =
-                apartmentRepository.findTop100ByLatitudeIsNull();
-
-        for (Apartment apartment : apartments) {
-            KakaoGeocodingService.Coordinate coordinate =
-                    kakaoGeocodingService.getCoordinate(
-                            apartment.getAddress()
-                    );
-
-            if (coordinate == null) {
-                continue;
-            }
-
-            apartment.updateCoordinate(
-                    coordinate.latitude(),
-                    coordinate.longitude()
-            );
-        }
-
-        return apartments.size();
-    }
-
-    public long getMissingCoordinateCount() {
-        return apartmentRepository
-                .countByLatitudeIsNull();
     }
 }
