@@ -1,24 +1,37 @@
 # Real Estate Transaction Dashboard
 
-아파트 실거래 데이터를 수집·관리하고, 지도 기반으로 거래 현황을 조회할 수 있는 부동산 실거래 데이터 시각화 서비스입니다.
+공공데이터 API와 국토교통부 실거래 Excel 데이터를 수집·관리하고,
+지도와 데이터 표를 통해 아파트 실거래 정보를 조회하는 서비스입니다.
 
-공공데이터 API 및 Excel 데이터를 활용하여 실거래 데이터를 구축하고,
-Spring Boot 기반 REST API와 React 지도 화면을 통해 지역별 거래 현황을 제공합니다.
+Spring Boot 기반 REST API와 React로 구현했으며, 
+저장된 데이터와 외부 API를 함께 활용할 수 있도록 구성했습니다.
 
 ## 주요 기능
 
-### 실거래 데이터 관리
+### 실거래 데이터 조회 (표) 
+- 반복적인 외부 API 호출을 줄이고, 저장된 데이터를 향후 통계·집계 기능에서도 활용할 수 있도록
+공공데이터 api 호출 조회와 db조회를 함께 구현
 
-* 공공데이터 API를 통한 아파트 실거래 데이터 조회
-* Excel 데이터를 파싱하여 DB에 저장
-* 지역명을 기반으로 `sggCd` 지역 코드 매핑
-* 데이터 중복 입력 방지
-* 업로드 데이터 관리
+- 데이터 저장 여부에 따른 조회 소스 분기
+   - DB 저장 월 → DB 조회
+   - DB 미저장 월 → 공공데이터 API 조회
 
-### 관리자 기능
+### 실거래 데이터 관리 (관리자 import)
 
-* 관리자용 국토교통부 실거래 Excel 데이터 업로드
-* 업로드 데이터 날짜별 관리 및 현황 관리
+- 국토교통부 실거래 Excel 데이터 Import
+- Apache POI 기반 대량 데이터 파싱 및 DB 저장
+- 신규 아파트 등록 및 중복 생성 방지
+- Import 기간 관리 및 중복 기간 업로드 차단
+- 월별 DB 조회 승인 / 취소
+
+
+### 인증 / 회원 관리
+- 회원가입 및 중복 검사
+- BCrypt 비밀번호 해싱
+- Access / Refresh Token 발급
+- 회원정보 조회 / 수정
+- Access Token 만료 시 Refresh Token을 이용한 재발급
+
 
 ### 지도 기반 실거래 조회
 
@@ -29,6 +42,8 @@ Spring Boot 기반 REST API와 React 지도 화면을 통해 지역별 거래 �
 * 아파트 위치 마커 표시
 * 아파트별 거래 금액 및 거래 정보 확인
 * 최소/최대 거래금액 필터
+
+
 
 ## Tech Stack
 
@@ -47,48 +62,44 @@ Spring Boot 기반 REST API와 React 지도 화면을 통해 지역별 거래 �
 * Vite
 * Tailwind CSS
 
+### DATA / API
+
+- 공공데이터포털 아파트 실거래 API
+- 국토교통부 실거래가 공개시스템 Excel
+- Kakao API
+
 ## Architecture
 
-```text
-Frontend (React)
-        │
-        │ REST API
-        ▼
-Spring Boot
-        │
-        ├── Controller
-        │
-        ├── Service
-        │
-        ├── Repository
-        │
-        ▼
-      MySQL
+```mermaid
+flowchart LR
+    A["React / TypeScript"] -->|REST API| B["Spring Boot"]
+
+    B --> C["MySQL"]
+    B --> D["External API"]
+
+    D --> E["공공데이터 API"]
+    D --> F["Kakao API"]
 ```
 
+
 ## Excel Import
-
-국토교통부 실거래 Excel 파일을 관리자 페이지에서 업로드하면 서버에서 Apache POI를 이용하여 데이터를 읽습니다.
-
 ```text
 Excel Upload
      ↓
-MultipartFile
+Apache POI Parsing
      ↓
-Apache POI
+중복 기간 검사
      ↓
-데이터 파싱
+지역코드 매핑
      ↓
-지역 코드 매핑
+Apartment / Transaction 저장
      ↓
-데이터 검증
-     ↓
-MySQL 저장
+Import 이력 저장
 ```
 
-Excel의 주소 데이터에서 시군구와 법정동을 분리하고 내부 지역 코드 테이블을 이용하여 `sggCd`를 매핑합니다.
+데이터 출처에 따라 다른 지역 정보 형식을 통일하기 위해 Region 테이블을 사용.
+Import 시작 시 Region 데이터를 한 번 조회하여 Map으로 변환한 뒤 행별 지역코드 매핑에 사용하여 반복적인 DB 조회를 줄였습니다.
 
-매핑할 수 없는 지역 데이터는 잘못된 지역 코드가 저장되지 않도록 제외합니다.
 
 ## Map Data Loading
 
@@ -121,70 +132,22 @@ GET /api/transactions/map
 
 이를 통해 지도 이동 시 필요한 범위의 데이터만 조회하도록 구성했습니다.
 
-## Authentication
 
-Spring Security와 JWT를 이용하여 인증 구조를 구현했습니다.
+## 구현 과정에서 해결한 주요 문제
+### [Issue #1 - 로그인, 회원가입](https://github.com/forthewy/realestate_web/issues/1)
+- JWT 만료 요청이 403으로 처리되던 문제를 JwtFilter에서 401을 반환하도록 수정하여 Refresh Token 재발급 흐름 정상화
 
-```text
-Login
-  ↓
-ID / Password 검증
-  ↓
-JWT 발급
-  ↓
-Client Token 저장
-  ↓
-API 요청 시 Authorization Header 전달
-  ↓
-JwtFilter 인증
-```
 
-공개 실거래 조회 API와 관리자 API를 분리하고 관리자 기능은 인증된 사용자만 접근할 수 있도록 구성했습니다.
+### [Issue #4 - 실거래 데이터 관리화면](https://github.com/forthewy/realestate_web/issues/4)
+- API와 Excel의 서로 다른 지역 정보 형식을 Region 기반 sggCd로 통일
+- 읍·면·리 등 주소 구조 차이를 고려한 지역코드 매핑 처리
+  
 
-## Project Structure
 
-```text
-backend
-└── src/main/java/com/jane/realestate
-    ├── config
-    ├── controller
-    ├── dto
-    ├── entity
-    ├── enums
-    ├── repository
-    ├── security
-    └── service
-
-frontend
-└── src
-    ├── components
-    ├── pages
-    ├── router
-    ├── api
-    └── types
-```
-
-## 개발 목적
-
-단순 CRUD 프로젝트를 넘어 실제 공공데이터를 수집하고 가공하여 서비스에서 사용할 수 있는 형태로 관리하는 과정을 구현하는 것을 목표로 했습니다.
-
-특히 다음 내용을 직접 구현하고 경험하는 데 중점을 두었습니다.
-
-* 외부 공공데이터 처리
-* 대용량 Excel 데이터 파싱
-* 데이터 정제 및 지역 코드 매핑
-* 중복 데이터 관리
-* REST API 설계
-* Spring Security / JWT 인증
-* JPA 기반 데이터 조회
-* 지도 영역 기반 데이터 조회
-* React와 Spring Boot 간 API 연동
 
 ## 개선 예정
+- 지도 조회 API 성능 최적화
+- 대량 데이터 Import 성능 개선
+- 실거래 통계 / 집계 API 추가
+- 지역별 거래량 시각화 개선
 
-* 지도 조회 API 성능 최적화
-* 대량 데이터 Import 성능 개선
-* 실거래 데이터 통계 API 추가
-* 지역별 거래량 시각화 개선
-* 관리자 데이터 관리 기능 개선
-* 누락된 지역 코드 (2026년 개편된 지역코드) 반영
