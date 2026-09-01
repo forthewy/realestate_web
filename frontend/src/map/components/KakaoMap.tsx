@@ -30,10 +30,10 @@ type KakaoMapProps = {
 };
 
 function getMarkerColor(count: number) {
-  if (count >= 16) return "#2563eb";
-  if (count >= 10) return "#60a5fa";
-  if (count >= 5) return "#93c5fd";
-  return "#dbeafe";
+  if (count >= 16) return "#b34312";
+  if (count >= 10) return "#d66a2c";
+  if (count >= 5) return "#e9a06d";
+  return "#f5d5c3";
 }
 
 export default function KakaoMap({

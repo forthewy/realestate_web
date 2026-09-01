@@ -23,7 +23,6 @@ public class TransactionService {
     ) {
         // 저장된 달이라면 DB 조회
         if (transactionStoredMonthRepository.existsByYearMonth(dealYmd)) {
-            log.info("Transaction source: DB, yearMonth={}", dealYmd);
             return transactionDbService.getTransactions(
                     sggCd, dealYmd, pageNo
             );
@@ -32,7 +31,6 @@ public class TransactionService {
         // 그외에는 API 조회
         // API 조회시 날짜에 하이픈 제거
         String apiDealYmd = dealYmd.replace("-", "");
-        log.info("Transaction source: API, yearMonth={}", dealYmd);
         // API 조회
         return transactionApiService.getTransactions(
                 sggCd, apiDealYmd, pageNo

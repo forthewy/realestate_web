@@ -32,19 +32,6 @@ export default function TransactionMap() {
       });
   }, [bounds, minAmount, maxAmount]);
 
-  const filteredApartments = apartments.filter((apartment) => {
-    const price = apartment.price;
-
-    if (minAmount && price < Number(minAmount)) {
-      return false;
-    }
-
-    if (maxAmount && price > Number(maxAmount)) {
-      return false;
-    }
-
-    return true;
-  });
 
   return (
     <div className="p-6">
