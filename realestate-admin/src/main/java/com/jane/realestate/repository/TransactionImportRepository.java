@@ -22,4 +22,9 @@ public interface TransactionImportRepository
             @Param("monthStart") LocalDate monthStart,
             @Param("monthEnd") LocalDate monthEnd
     );
+
+    boolean existsByStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            LocalDate endDate,
+            LocalDate startDate
+    );
 }

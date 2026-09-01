@@ -85,7 +85,17 @@ export default function AdminCalendar({
                 <h2 className="text-xl font-semibold">
                     {year}년 {month}월
                 </h2>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="h-3 w-8 rounded-sm bg-deep-primary/70" />
+                        <span className="text-sm">등록 완료</span>
+                    </div>
 
+                    <div className="flex items-center gap-2">
+                        <span className="h-3 w-8 rounded-sm bg-gray/20" />
+                        <span className="text-sm">미등록</span>
+                    </div>
+                </div>
                 <div className="flex gap-2">
                     <button
                         type="button"
@@ -120,33 +130,30 @@ export default function AdminCalendar({
                 {calendarDays.map((date, index) => (
                     <div
                         key={index}
-                        className={`min-h-24 border border-gray p-2 ${isToday(date)
+                        className={`min-h-24 border border-gray ${isToday(date)
                             ? "bg-primary/10"
                             : ""
                             }`}
                     >
-                        <div className="flex">
-                            {date}
+                        <div className="p-2">
+                            <div className="flex">
+                                {date}
 
-                            {isToday(date) && (
-                                <div className="ml-2 text-sm font-medium text-primary">
-                                    오늘
-                                </div>
-                            )}
+                                {isToday(date) && (
+                                    <div className="ml-2 text-sm font-medium text-primary">
+                                        오늘
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {date && (
-                            <div className="mt-2">
-                                {isImported(date) ? (
-                                    <span className="text-sm font-medium">
-                                        등록
-                                    </span>
-                                ) : (
-                                    <span className="text-sm text-text-secondary">
-                                        미등록
-                                    </span>
-                                )}
-                            </div>
+                            <div
+                                className={`h-4 w-full ${isImported(date)
+                                        ? "bg-deep-primary/70"
+                                        : "bg-gray/20"
+                                    }`}
+                            />
                         )}
                     </div>
                 ))}

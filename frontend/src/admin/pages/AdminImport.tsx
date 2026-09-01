@@ -5,6 +5,8 @@ import {
     getTransactionImports,
     getTransactionImportStatus,
     importExcel,
+    geocodeApartments,
+    getGeocodeStatus,
     type TransactionImport,
 } from "../../services/api";
 import AdminCalendar from "../components/AdminCalendar";
@@ -21,6 +23,8 @@ export default function AdminImport() {
 
     const [approvable, setApprovable] = useState(false);
     const [approved, setApproved] = useState(false);
+    const [missingCoordinateCount, setMissingCoordinateCount] = useState(0);
+
     const handleApprove = async () => {
         const response = await approveStoredMonth(selectedMonth);
 
@@ -41,7 +45,16 @@ export default function AdminImport() {
 
         setApproved(false);
     };
+    const handleGeocode = async () => {
+        const response = await geocodeApartments();
 
+        if (!response.ok) {
+            alert("좌표 변환에 실패했습니다.");
+            return;
+        }
+
+        alert("좌표 변환이 완료되었습니다.");
+    };
     useEffect(() => {
         const loadImports = async () => {
             try {
@@ -71,6 +84,18 @@ export default function AdminImport() {
 
         loadStatus();
     }, [selectedMonth]);
+    useEffect(() => {
+        const loadGeocodeStatus = async () => {
+            try {
+                const count = await getGeocodeStatus();
+                setMissingCoordinateCount(count);
+            } catch (error) {
+                console.error("좌표 미등록 개수 조회 실패:", error);
+            }
+        };
+
+        loadGeocodeStatus();
+    }, []);
 
     const uploadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -146,7 +171,29 @@ export default function AdminImport() {
                     </button>
                 </form>
             </div>
+            {/* 아파트 좌표 관리 */}
+            <div className="mt-8 rounded-xl border border-gray p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm text-text-secondary">
+                            아파트 좌표 상태
+                        </p>
 
+                        <p className="mt-1 text-xl font-semibold">
+                            미등록 {missingCoordinateCount.toLocaleString()}개
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleGeocode}
+                        disabled={missingCoordinateCount === 0}
+                        className="rounded-lg bg-primary px-5 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        좌표 변환
+                    </button>
+                </div>
+            </div>
             {/* 선택 월 데이터 상태 */}
             <div className="mt-8 rounded-xl border border-gray p-6">
                 <div className="flex items-center justify-between">

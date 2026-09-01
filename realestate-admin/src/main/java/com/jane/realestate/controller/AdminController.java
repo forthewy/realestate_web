@@ -67,8 +67,22 @@ public class AdminController {
         adminService.cancelStoredMonth(yearMonth);
     }
 
+//    @PostMapping("/apartments/geocode")
+//    public void geocodeApartments() {
+//        apartmentGeocodingService.updateCoordinates();
+//    }
+
     @PostMapping("/apartments/geocode")
-    public void geocodeApartments() {
-        apartmentGeocodingService.updateCoordinates();
+    public ResponseEntity<Void> geocodeApartments() {
+
+        adminService.geocodeApartments();
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // 위도 경도 미입력된 아파트 조회
+    @GetMapping("/apartments/geocode/status")
+    public long getGeocodeStatus() {
+        return adminService.getMissingCoordinateCount();
     }
 }

@@ -116,9 +116,25 @@ public class AdminService {
             LocalDate endDate =
                     LocalDate.parse(dates[1].trim());
 
+
+            // 기존 Import 기간과 중복 검사
+            boolean duplicated =
+                    transactionImportRepository
+                            .existsByStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                                    endDate,
+                                    startDate
+                            );
+
+            if (duplicated) {
+                throw new IllegalStateException(
+                        "이미 등록된 기간과 겹칩니다."
+                );
+            }
+
+            //---- 데이터 입력 시작 -----
+
             // 14번째 행부터 실제 데이터
-//            for (int i = 14; i <= sheet.getLastRowNum(); i++) {
-            for (int i = 14; i <= 200; i++) {
+            for (int i = 14; i <= sheet.getLastRowNum(); i++) {
 
                 Row row = sheet.getRow(i);
 
@@ -289,28 +305,6 @@ public class AdminService {
 
             // 거래 일괄 저장
             transactionRepository.saveAll(transactions);
-
-            // 신규 아파트 좌표 조회
-            for (Apartment apartment : newApartments) {
-
-                KakaoGeocodingService.Coordinate coordinate =
-                        kakaoGeocodingService.getCoordinate(
-                                apartment.getAddress()
-                        );
-
-                if (coordinate == null) {
-                    log.warn(
-                            "아파트 좌표 조회 실패 - {}",
-                            apartment.getAddress()
-                    );
-                    continue;
-                }
-
-                apartment.updateCoordinate(
-                        coordinate.latitude(),
-                        coordinate.longitude()
-                );
-            }
 
             // 신규 아파트 일괄 저장
             apartmentRepository.saveAll(newApartments);
@@ -567,4 +561,33 @@ public class AdminService {
         transactionStoredMonthRepository.deleteByYearMonth(yearMonth);
     }
 
+    @Transactional
+    public int geocodeApartments() {
+
+        List<Apartment> apartments =
+                apartmentRepository.findTop100ByLatitudeIsNull();
+
+        for (Apartment apartment : apartments) {
+            KakaoGeocodingService.Coordinate coordinate =
+                    kakaoGeocodingService.getCoordinate(
+                            apartment.getAddress()
+                    );
+
+            if (coordinate == null) {
+                continue;
+            }
+
+            apartment.updateCoordinate(
+                    coordinate.latitude(),
+                    coordinate.longitude()
+            );
+        }
+
+        return apartments.size();
+    }
+
+    public long getMissingCoordinateCount() {
+        return apartmentRepository
+                .countByLatitudeIsNull();
+    }
 }

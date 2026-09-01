@@ -28,4 +28,12 @@ public interface ApartmentRepository extends JpaRepository<Apartment, Long> {
             @Param("minLng") Double minLng,
             @Param("maxLng") Double maxLng
     );
+
+
+    // 위도 경도 없는 아파트 리스트
+    List<Apartment> findTop100ByLatitudeIsNull();
+
+
+    // 위도 경도 없는 아파트 갯수
+    long countByLatitudeIsNull();
 }

@@ -222,3 +222,22 @@ export function getTransactionImportStatus(yearMonth: string) {
         `/api/admin/import/status${buildQuery({ yearMonth })}`
     );
 }
+
+// 아파트 위도경도 추가
+export async function geocodeApartments() {
+    return apiFetch(
+        "/api/admin/apartments/geocode",
+        {
+            method: "POST",
+        }
+    );
+}
+
+export function getGeocodeStatus() {
+    return apiJson<number>(
+        "/api/admin/apartments/geocode/status",
+        {
+            method: "GET",
+        }
+    )
+}
