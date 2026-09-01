@@ -8,13 +8,15 @@ Spring Boot 기반 REST API와 React로 구현했으며,
 
 ## 관리자 화면
 <p align="center">
-<img width="32%"  alt="image" src="https://github.com/user-attachments/assets/447c8a8e-31fb-4d5e-a069-f5d3f584c568" />
-<img width="32%"  alt="image" src="https://github.com/user-attachments/assets/2cae8df4-747e-46b4-a2e8-5b2c9a406927" />
+<img width="45%" height="300px"  alt="image" src="https://github.com/user-attachments/assets/447c8a8e-31fb-4d5e-a069-f5d3f584c568" />
+<img width="45%" height="300px" alt="image" src="https://github.com/user-attachments/assets/2cae8df4-747e-46b4-a2e8-5b2c9a406927" />
 </p>
 
 ## 공통화면
 <p align="center">
-<img width="32%" alt="image" src="https://github.com/user-attachments/assets/d5f5eccb-7e3c-47ba-8157-8fc81e1d4896" />
+<img width="45%" height="300px"alt="image" src="https://github.com/user-attachments/assets/d5f5eccb-7e3c-47ba-8157-8fc81e1d4896" />
+<img width="45%" height="300px"alt="image" src="https://github.com/user-attachments/assets/baf1a646-7470-41a2-84c9-05a1a2fbb8c4" />
+
 </p>
 
 
@@ -49,9 +51,8 @@ Spring Boot 기반 REST API와 React로 구현했으며,
 ### 지도 기반 실거래 조회
 
 * Kakao Maps API를 이용한 지도 표시
-* 현재 지도 영역을 기준으로 실거래 데이터 조회
+* 현재 지도 영역을 기준으로 데이터 조회
 * 지도 이동/확대 시 조회 범위 자동 갱신
-* 거래량에 따른 지역 시각화
 * 아파트 위치 마커 표시
 * 아파트별 거래 금액 및 거래 정보 확인
 * 최소/최대 거래금액 필터
