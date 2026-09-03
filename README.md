@@ -64,7 +64,6 @@ Spring Boot 기반 REST API와 React로 구현했으며,
 
 * Java
 * Spring Boot
-* Spring Data JPA
 * Spring Security
 * JWT
 * MySQL
