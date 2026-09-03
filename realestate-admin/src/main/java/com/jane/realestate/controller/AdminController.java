@@ -4,6 +4,7 @@ import com.jane.realestate.dto.TransactionImportResponse;
 import com.jane.realestate.dto.TransactionImportStatusResponse;
 import com.jane.realestate.dto.UserResponse;
 import com.jane.realestate.service.AdminService;
+import com.jane.realestate.service.TransactionImportService;
 import com.jane.realestate.service.ApartmentGeocodingService;
 import com.jane.realestate.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final AdminService adminService;
+    private final TransactionImportService transactionImportService;
     private final ApartmentGeocodingService apartmentGeocodingService;
+    private final AdminService adminService;
     private final UserService userService;
 
     @GetMapping("/users")
@@ -32,7 +34,7 @@ public class AdminController {
     // Excel 업로드
     @PostMapping("/import")
     public void importExcel(@RequestParam("file") MultipartFile file) {
-        adminService.importExcel(file);
+        transactionImportService.importExcel(file);
     }
 
     // 해당 월 임포트 이력 조회
