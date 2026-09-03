@@ -24,8 +24,7 @@ Spring Boot 기반 REST API와 React로 구현했으며,
 ## 주요 기능
 
 ### 실거래 데이터 조회 (표) 
-- 반복적인 외부 API 호출을 줄이고, 저장된 데이터를 향후 통계·집계 기능에서도 활용할 수 있도록
-공공데이터 api 호출 조회와 db조회를 함께 구현
+- 반복적인 외부 API 호출을 줄이기 위해 DB 저장 데이터와 공공데이터 API를 함께 활용하는 조회 구조 구현
 
 - 데이터 저장 여부에 따른 조회 소스 분기
    - DB 저장 월 → DB 조회
@@ -65,6 +64,8 @@ Spring Boot 기반 REST API와 React로 구현했으며,
 
 * Java
 * Spring Boot
+* Spring Data JPA
+* Spring Security
 * JWT
 * MySQL
 * Apache POI
@@ -151,17 +152,16 @@ GET /api/transactions/map
 ### [Issue #1 - 로그인, 회원가입](https://github.com/forthewy/realestate_web/issues/1)
 - JWT 만료 요청이 403으로 처리되던 문제를 JwtFilter에서 401을 반환하도록 수정하여 Refresh Token 재발급 흐름 정상화
 
-
-### [Issue #4 - 실거래 데이터 관리화면](https://github.com/forthewy/realestate_web/issues/4)
-- API와 Excel의 서로 다른 지역 정보 형식을 Region 기반 sggCd로 통일
-- 읍·면·리 등 주소 구조 차이를 고려한 지역코드 매핑 처리
   
-
+### [Issue #4 - 대량 데이터 Import 성능 개선](https://github.com/forthewy/realestate_web/issues/4)
+- Import 구간별 성능 측정을 통해 Transaction 저장이 전체 처리 시간의 약 48~52%를 차지하는 병목임을 확인
+- JPA saveAll()을 JdbcTemplate.batchUpdate() 기반 Batch INSERT로 변경
+- 단순 Batch 적용 시 오히려 성능이 저하되는 현상을 확인하고 MySQL Connector/J의 rewriteBatchedStatements=true를 적용
+- 동일 5,186건 기준 Transaction 저장 시간 약 1.7 ~ 1.9초 → 약 0.45초(약 74~76% 감소)
 
 
 ## 개선 예정
 - 지도 조회 API 성능 최적화
-- 대량 데이터 Import 성능 개선
 - 실거래 통계 / 집계 API 추가
 - 지역별 거래량 시각화 개선
 
