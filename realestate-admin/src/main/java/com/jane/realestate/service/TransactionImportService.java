@@ -6,6 +6,7 @@ import com.jane.realestate.entity.Region;
 import com.jane.realestate.entity.Transaction;
 import com.jane.realestate.entity.TransactionImport;
 import com.jane.realestate.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -37,6 +38,7 @@ public class TransactionImportService {
 
     // ---------- 실거래 데이터 Import ----------
     // 엑셀 업로드
+    @Transactional
     public void importExcel(MultipartFile file) {
         long startTime = System.nanoTime();
 

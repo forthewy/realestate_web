@@ -23,6 +23,10 @@ public class SecurityConfig {
                 // CSRF 보호 비활성화 (JWT 기반 REST API 사용)
                 .csrf(csrf -> csrf.disable())
 
+                // Spring Security가 인증 상태를 세션에 저장하지 않음
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 가능한 API
                         // 로그인 / 회원가입 / 토큰 재발급
