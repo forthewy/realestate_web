@@ -1,7 +1,7 @@
 package com.jane.realestate.service;
 
 
-import com.jane.realestate.entity.Apartment;
+import com.jane.realestate.dto.TransactionSaveData;
 import com.jane.realestate.entity.Region;
 import com.jane.realestate.entity.Transaction;
 import com.jane.realestate.entity.TransactionImport;
@@ -31,10 +31,8 @@ import java.util.stream.Collectors;
 public class TransactionImportService {
 
     private final RegionRepository regionRepository;
-    private final TransactionBatchRepository transactionBatchRepository;
-    private final ApartmentRepository apartmentRepository;
     private final TransactionImportRepository transactionImportRepository;
-
+    private final TransactionSaveService transactionSaveService;
 
     // ---------- 실거래 데이터 Import ----------
     // 엑셀 업로드
@@ -55,23 +53,8 @@ public class TransactionImportService {
                         Region::getCode
                 ));
 
-        // Import 중 반복적인 DB 조회를 방지하기 위해 기존 아파트를 Map으로 로드
-        Map<String, Apartment> apartmentMap =
-                apartmentRepository.findAll()
-                        .stream()
-                        .collect(Collectors.toMap(
-                                apartment ->
-                                        createApartmentKey(
-                                                apartment.getSggCd(),
-                                                apartment.getUmdNm(),
-                                                apartment.getJibun()
-                                        ),
-                                apartment -> apartment,
-                                (existing, duplicate) -> existing
-                        ));
 
-        List<Transaction> transactions = new ArrayList<>();
-        List<Apartment> newApartments = new ArrayList<>();
+        List<TransactionSaveData> saveDataList = new ArrayList<>();
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -182,15 +165,7 @@ public class TransactionImportService {
                 String fullAddress =
                         address + " " + jibun;
 
-                findOrCreateApartment(
-                        apartmentMap,
-                        newApartments,
-                        aptName,
-                        sggCd,
-                        umdNm,
-                        jibun,
-                        fullAddress
-                );
+
 
                 // 거래 년월
                 String yearMonth =
@@ -276,33 +251,19 @@ public class TransactionImportService {
                                 )
                                 .build();
 
-                transactions.add(transaction);
+                saveDataList.add(
+                        new TransactionSaveData(transaction, fullAddress)
+                );
             }
 
-            // 거래 일괄 저장
-            long transactionSaveStart = System.nanoTime();
-            transactionBatchRepository.batchInsert(transactions);
-            long transactionSaveEnd = System.nanoTime();
-
-            // 신규 아파트 일괄 저장
-            long apartmentSaveStart = System.nanoTime();
-            apartmentRepository.saveAll(newApartments);
-            long apartmentSaveEnd = System.nanoTime();
-
-            log.info(
-                    "Save performance - transactions: {}건 / {} ms, apartments: {}건 / {} ms",
-                    transactions.size(),
-                    (transactionSaveEnd - transactionSaveStart) / 1_000_000.0,
-                    newApartments.size(),
-                    (apartmentSaveEnd - apartmentSaveStart) / 1_000_000.0
-            );
+            transactionSaveService.save(saveDataList);
 
             // Import 이력 저장
             TransactionImport transactionImport =
                     TransactionImport.builder()
                             .startDate(startDate)
                             .endDate(endDate)
-                            .transactionCount(transactions.size())
+                            .transactionCount(saveDataList.size())
                             .skippedCount(skippedCount)
                             .build();
 
@@ -327,84 +288,17 @@ public class TransactionImportService {
                     Excel import completed
                     - file: {}
                     - rows: {}
-                    - inserted transactions: {}
-                    - inserted apartments: {}
+                    - transactions: {}
                     - skipped: {}
                     - elapsed: {} sec
                     """,
                     file.getOriginalFilename(),
                     totalRows,
-                    transactions.size(),
-                    newApartments.size(),
+                    saveDataList.size(),
                     skippedCount,
                     String.format("%.2f", elapsedSeconds)
             );
         }
-    }
-
-
-    // 아파트 조회 / 신규 생성
-    private void findOrCreateApartment(
-            Map<String, Apartment> apartmentMap,
-            List<Apartment> newApartments,
-            String aptName,
-            String sggCd,
-            String umdNm,
-            String jibun,
-            String fullAddress
-    ) {
-        String apartmentKey =
-                createApartmentKey(sggCd, umdNm, jibun);
-
-        if (apartmentMap.containsKey(apartmentKey)) {
-            return;
-        }
-
-        Apartment apartment =
-                createApartment(
-                        aptName,
-                        sggCd,
-                        umdNm,
-                        jibun,
-                        fullAddress
-                );
-
-        apartmentMap.put(apartmentKey, apartment);
-        newApartments.add(apartment);
-    }
-
-
-    // 신규 아파트 생성
-    private Apartment createApartment(
-            String aptName,
-            String sggCd,
-            String umdNm,
-            String jibun,
-            String fullAddress
-    ) {
-
-        return Apartment.builder()
-                .aptName(aptName)
-                .sggCd(sggCd)
-                .umdNm(umdNm)
-                .jibun(jibun)
-                .address(fullAddress)
-                .build();
-    }
-
-
-    // 아파트 중복 판별 Key
-    private String createApartmentKey(
-            String sggCd,
-            String umdNm,
-            String jibun
-    ) {
-
-        return sggCd
-                + "|"
-                + umdNm
-                + "|"
-                + jibun;
     }
 
 }
