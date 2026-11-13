@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -56,6 +57,26 @@ public class TransactionBatchRepository {
                     ps.setString(11, transaction.getDealType());
                     ps.setTimestamp(12, Timestamp.valueOf(createdAt));
                 }
+        );
+    }
+
+    public int deleteByRegionAndPeriod(
+            String sggCd,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        String sql = """
+            DELETE FROM transactions
+            WHERE sgg_cd = ?
+              AND deal_date >= ?
+              AND deal_date < ?
+            """;
+
+        return jdbcTemplate.update(
+                sql,
+                sggCd,
+                Date.valueOf(startDate),
+                Date.valueOf(endDate)
         );
     }
 }

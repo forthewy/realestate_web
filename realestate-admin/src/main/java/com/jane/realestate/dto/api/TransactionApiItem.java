@@ -1,9 +1,12 @@
 package com.jane.realestate.dto.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.jane.realestate.entity.Transaction;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
+import java.time.LocalDate;
 
 @Getter
 @NoArgsConstructor
@@ -42,4 +45,32 @@ public class TransactionApiItem {
 
     @JacksonXmlProperty(localName = "sggCd")
     private String sggCd;
+
+    @JacksonXmlProperty(localName = "jibun")
+    private String jibun;
+
+    @JacksonXmlProperty(localName = "dealingGbn")
+    private String dealType;
+
+    public Transaction toEntity() {
+        return Transaction.builder()
+                .aptName(aptName)
+                .dealAmount(
+                        Long.parseLong(
+                                dealAmount.replace(",", "").trim()
+                        )
+                )
+                .dealDate(
+                        LocalDate.of(dealYear, dealMonth, dealDay)
+                )
+                .area(area)
+                .floor(floor)
+                .buildYear(buildYear)
+                .dong(dong)
+                .jibun(jibun)
+                .umdNm(umdNm)
+                .sggCd(sggCd)
+                .dealType(dealType)
+                .build();
+    }
 }
