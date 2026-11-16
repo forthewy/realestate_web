@@ -3,12 +3,17 @@ package com.jane.realestate.service;
 import com.jane.realestate.dto.TransactionSaveData;
 import com.jane.realestate.dto.api.TransactionApiItem;
 import com.jane.realestate.dto.api.TransactionApiResponse;
+import com.jane.realestate.entity.ApiImportRun;
 import com.jane.realestate.entity.Region;
 import com.jane.realestate.entity.Transaction;
+import com.jane.realestate.enums.ApiImportStatus;
+import com.jane.realestate.repository.ApiImportRunRepository;
 import com.jane.realestate.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -16,8 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -27,6 +30,9 @@ public class TransactionApiImportService {
     private final RegionRepository regionRepository;
     private final TransactionApiService transactionApiService;
     private final TransactionApiReplaceService transactionApiReplaceService;
+    private final ApiImportRunRepository apiImportRunRepository;
+    private final ApiImportHistoryService apiImportHistoryService;
+
 
     public List<TransactionSaveData> convert(
             List<TransactionApiItem> items
@@ -115,7 +121,7 @@ public class TransactionApiImportService {
     }
 
     // 최근 2개월 조회
-    public void collectRecentMonths(String sggCd) {
+    public ImportResult collectRecentMonths(String sggCd, ApiImportRun run) {
 
         YearMonth currentMonth = YearMonth.now(
                 ZoneId.of("Asia/Seoul")
@@ -124,6 +130,8 @@ public class TransactionApiImportService {
         DateTimeFormatter formatter =
                 DateTimeFormatter.ofPattern("yyyyMM");
 
+        int successCount = 0;
+        int failureCount = 0;
 
         for (int i = 0; i < 2; i++) {
             String dealYmd = currentMonth.minusMonths(i)
@@ -145,30 +153,84 @@ public class TransactionApiImportService {
                         saveData
                 );
 
+                successCount++;
+
                 log.info("API 수집 완료 - 지역: {}, 거래연월: {}, 건수: {}",
                         sggCd, dealYmd, items.size());
+
+
+
             } catch (RuntimeException e) {
+                failureCount++;
                 log.error("API 수집 실패 - 지역: {}, 거래연월: {}", sggCd, dealYmd, e);
+
+                // 실패 기록 저장
+                try {
+                    apiImportHistoryService.recordFailure(
+                            run.getId(), sggCd, dealYmd, e
+                    );
+                } catch (RuntimeException historyException) {
+                    log.error("API 실패 이력 저장 실패 - 지역: {}, 거래연월: {}",
+                            sggCd, dealYmd, historyException);
+                }
+
+                continue;
+            }
+            // 2. 거래 저장 성공 후 이전 실패 기록 복구
+            try {
+                apiImportHistoryService.resolveFailures(sggCd, dealYmd);
+            } catch (RuntimeException e) {
+                log.error("API 실패 이력 복구 처리 실패 - 지역: {}, 거래연월: {}",
+                        sggCd, dealYmd, e);
             }
         }
+
+        return new ImportResult(successCount, failureCount);
     }
 
     // 전국 지역 조회
     public void collectAllRegions() {
 
-        List<Region> regions = regionRepository.findAll();
+        ApiImportRun run = ApiImportRun.builder()
+                .startedAt(LocalDateTime.now())
+                .status(ApiImportStatus.RUNNING)
+                .build();
 
-        if (regions.isEmpty()) {
-            return;
-        }
+        run = apiImportRunRepository.save(run);
 
-        // 상위 지역 코드 제외
-        for (Region region : regions) {
-            if (region.getCode().endsWith("000")) {
-                continue;
+        int successCount = 0;
+        int failureCount = 0;
+
+        try {
+            List<Region> regions = regionRepository.findAll();
+
+            if (regions.isEmpty()) {
+                throw new IllegalStateException("수집할 지역 정보가 없습니다.");
             }
 
-            collectRecentMonths(region.getCode());
+            // 상위 지역 코드 제외
+            for (Region region : regions) {
+                if (region.getCode().endsWith("000")) {
+                    continue;
+                }
+
+                ImportResult result =
+                        collectRecentMonths(region.getCode(), run);
+
+                successCount += result.successCount();
+                failureCount += result.failureCount();
+
+            }
+            run.finish(successCount, failureCount);
+        } catch (RuntimeException e) {
+            run.fail(successCount, failureCount);
+            log.error("전국 API 수집 중단", e);
+        } finally {
+            apiImportRunRepository.save(run);
         }
     }
+
+    public record ImportResult(int successCount, int failureCount) {
+    }
+
 }

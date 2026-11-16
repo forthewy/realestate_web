@@ -23,4 +23,5 @@ public class TransactionApiScheduler {
 
         log.info("주간 실거래 데이터 수집 종료");
     }
+
 }
