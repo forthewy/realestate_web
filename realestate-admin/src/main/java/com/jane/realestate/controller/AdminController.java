@@ -1,13 +1,9 @@
 package com.jane.realestate.controller;
 
-import com.jane.realestate.dto.TransactionImportResponse;
-import com.jane.realestate.dto.TransactionImportStatusResponse;
-import com.jane.realestate.dto.UserResponse;
-import com.jane.realestate.service.AdminService;
-import com.jane.realestate.service.TransactionImportService;
-import com.jane.realestate.service.ApartmentGeocodingService;
-import com.jane.realestate.service.UserService;
+import com.jane.realestate.dto.*;
+import com.jane.realestate.service.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,12 +13,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminController {
 
     private final TransactionImportService transactionImportService;
     private final ApartmentGeocodingService apartmentGeocodingService;
     private final AdminService adminService;
     private final UserService userService;
+    private final ApiImportHistoryService apiImportHistoryService;
 
     @GetMapping("/users")
     public ResponseEntity<List<UserResponse>> getUsers() {
@@ -55,6 +53,21 @@ public class AdminController {
         return ResponseEntity.ok(
                 adminService.getImportStatus(yearMonth)
         );
+    }
+
+    @GetMapping("/api-import/history")
+    public List<ApiImportRunResponse> getApiImportRunResponseListTop10() {
+        return apiImportHistoryService.getRecentRuns();
+    }
+
+    @GetMapping("/api-import/history/{runId}/failures")
+    public List<ApiImportFailureResponse> getApiImportFailureResponse(@PathVariable Long runId) {
+        return apiImportHistoryService.getFailuresByRunId(runId);
+    }
+
+    @GetMapping("/api-import/failures/unresolved/count")
+    public long getUnresolvedFailureCount() {
+        return apiImportHistoryService.getUnresolvedFailureCount();
     }
 
     // DB 조회 승인

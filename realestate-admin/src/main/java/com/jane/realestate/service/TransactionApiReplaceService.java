@@ -23,6 +23,10 @@ public class TransactionApiReplaceService {
             YearMonth dealMonth,
             List<TransactionSaveData> saveData
     ) {
+        if (saveData.isEmpty()) {
+            return;
+        }
+
         LocalDate startDate = dealMonth.atDay(1);
         LocalDate endDate = dealMonth.plusMonths(1).atDay(1);
 

@@ -241,3 +241,41 @@ export function getGeocodeStatus() {
         }
     )
 }
+
+// api import 응답
+export type ApiImportRunResponse = {
+    id: number;
+    startedAt: string;
+    finishedAt: string | null;
+    status: "RUNNING" | "SUCCESS" | "PARTIAL_SUCCESS" | "FAILED";
+    successCount: number;
+    failureCount: number;
+};
+
+export function getApiImportHistory() {
+    return apiJson<ApiImportRunResponse[]>(
+        "/api/admin/api-import/history"
+    );
+}
+
+export type ApiImportFailureResponse = {
+    id: number;
+    sggCd: string;
+    dealMonth: string;
+    failedAt: string;
+    resolvedAt: string | null;
+    errorMessage: string | null;
+};
+
+export function getApiImportFailures(runId: number) {
+    return apiJson<ApiImportFailureResponse[]>(
+        `/api/admin/api-import/history/${runId}/failures`
+    );
+}
+
+export function getUnresolvedFailureCount() {
+    return apiJson<number>(
+        "/api/admin/api-import/failures/unresolved/count"
+    );
+}
+

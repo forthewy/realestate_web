@@ -1,5 +1,7 @@
 package com.jane.realestate.service;
 
+import com.jane.realestate.dto.ApiImportFailureResponse;
+import com.jane.realestate.dto.ApiImportRunResponse;
 import com.jane.realestate.entity.ApiImportFailure;
 import com.jane.realestate.entity.ApiImportRun;
 import com.jane.realestate.repository.ApiImportFailureRepository;
@@ -48,7 +50,39 @@ public class ApiImportHistoryService {
         failureRepository.save(failure);
     }
 
-    public List<ApiImportRun> findRecent10Runs() {
-        return runRepository.findTop10ByOrderByStartedAtDesc();
+    @Transactional(readOnly = true)
+    public List<ApiImportRunResponse> getRecentRuns() {
+
+        return runRepository.findTop10ByOrderByStartedAtDesc()
+                .stream()
+                .map(run -> new ApiImportRunResponse(
+                        run.getId(),
+                        run.getStartedAt(),
+                        run.getFinishedAt(),
+                        run.getStatus(),
+                        run.getSuccessCount(),
+                        run.getFailureCount()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApiImportFailureResponse> getFailuresByRunId(Long runId) {
+        return failureRepository.findByImportRunId(runId)
+                .stream()
+                .map(failure -> new ApiImportFailureResponse(
+                        failure.getId(),
+                        failure.getSggCd(),
+                        failure.getDealMonth(),
+                        failure.getFailedAt(),
+                        failure.getResolvedAt(),
+                        failure.getErrorMessage()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public long getUnresolvedFailureCount() {
+        return failureRepository.countUnresolvedRegionMonths();
     }
 }
